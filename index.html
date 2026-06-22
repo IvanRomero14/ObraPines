@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#0d1117"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ObraPines"/>
+<title>ObraPines</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiT2JyYVBpbmVzIiwic2hvcnRfbmFtZSI6Ik9icmFQaW5lcyIsImRlc2NyaXB0aW9uIjoiRG9jdW1lbnRhY2nDs24gZm90b2dyw6FmaWNhIGRlIG9icmEgc29icmUgcGxhbm9zIFBERiIsInN0YXJ0X3VybCI6Ii4iLCJzY29wZSI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsIm9yaWVudGF0aW9uIjoiYW55IiwiYmFja2dyb3VuZF9jb2xvciI6IiMwZDExMTciLCJ0aGVtZV9jb2xvciI6IiMwZDExMTciLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpSUhacFpYZENiM2c5SWpBZ01DQTFNVElnTlRFeUlqNDhjbVZqZENCM2FXUjBhRDBpTlRFeUlpQm9aV2xuYUhROUlqVXhNaUlnY25nOUlqRXdNQ0lnWm1sc2JEMGlJekJrTVRFeE55SXZQangwWlhoMElIZzlJakkxTmlJZ2VUMGlNamMwSWlCbWIyNTBMWE5wZW1VOUlqSTBNQ0lnWm1sc2JEMGlJekl5WkROaE9DSWdkR1Y0ZEMxaGJtTm9iM0o5SWcxcFpHUnNaU0lnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzSWlCbWIyNTBMWGRsYVdkb2REMGlPREF3SWo3d242U05QQzkwWlhoMFBqd3ZjM1puUGc9PSIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIiwicHVycG9zZSI6ImFueSJ9XX0="/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzBkMTExNyIvPjx0ZXh0IHg9IjI1NiIgeT0iMzQwIiBmb250LXNpemU9IjI0MCIgZmlsbD0iIzIyZDNhOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj7wn5KNPC90ZXh0Pjwvc3ZnPg=="/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Montserrat',sans-serif;background:#0d1117;color:#e6edf3;}
+input[type=file]{display:none;}
+button{font-family:'Montserrat',sans-serif;cursor:pointer;}
+
+/* ── SCREENS ── */
+.scr{display:none;flex-direction:column;height:100dvh;}
+.scr.on{display:flex;}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;height:52px;}
+.logo{font-weight:800;font-size:15px;color:#22d3a8;white-space:nowrap;letter-spacing:.5px;}
+.sp{flex:1;}
+.ibtn{width:40px;height:40px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;user-select:none;transition:background .12s;}
+.ibtn:hover{background:#30363d;}
+.back{background:none;border:none;color:#22d3a8;font-size:24px;cursor:pointer;padding:0 4px;flex-shrink:0;font-weight:800;}
+.badge{position:absolute;top:2px;right:2px;font-size:9px;font-weight:800;background:#22d3a8;color:#0d1117;border-radius:10px;padding:1px 5px;line-height:1.3;}
+
+/* ── CARDS ── */
+.clist{flex:1;overflow-y:auto;padding:12px 12px 80px;}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.card-main{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .12s;}
+.card-main:hover,.card-main:active{background:#21262d;}
+.cdot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.cinfo{flex:1;min-width:0;}
+.cname{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.3px;}
+.cmeta{font-size:11px;color:#8b949e;margin-top:2px;}
+.carr{color:#30363d;font-size:20px;flex-shrink:0;}
+.cname-inp{font-weight:800;font-size:14px;background:#0d1117;border:1px solid #22d3a8;border-radius:4px;color:#e6edf3;font-family:'Montserrat',sans-serif;padding:2px 8px;width:100%;outline:none;text-transform:uppercase;}
+.card-actions{display:flex;border-top:1px solid #21262d;}
+.cact-btn{flex:1;padding:8px 4px;background:none;border:none;color:#8b949e;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .12s;}
+.cact-btn:hover{background:#21262d;color:#e6edf3;}
+.cact-btn.danger:hover{background:#ef444411;color:#ef4444;}
+.cact-sep{width:1px;background:#21262d;flex-shrink:0;}
+.fab{position:fixed;bottom:24px;right:20px;width:54px;height:54px;border-radius:50%;background:#22d3a8;border:none;color:#0d1117;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px #22d3a866;z-index:10;}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;text-align:center;color:#8b949e;}
+.empty-ico{font-size:52px;}
+.empty h3{font-size:18px;font-weight:800;color:#e6edf3;}
+.empty p{font-size:13px;line-height:1.7;max-width:260px;}
+.empty-btn{padding:13px 28px;border-radius:10px;border:none;background:#22d3a8;color:#0d1117;font-weight:800;font-size:14px;margin-top:4px;}
+
+/* ── VIEWER ── */
+#vp{flex:1;overflow:hidden;position:relative;background:#141414;touch-action:none;user-select:none;cursor:grab;}
+#vp.panning{cursor:grabbing;}
+#vp.pinmode{cursor:crosshair;}
+#vp.relocating{cursor:crosshair;}
+#ct{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;transition:none;}
+#page-wrap{position:relative;display:block;}
+#pdf-img{display:block;width:100%;height:100%;pointer-events:none;}
+#pins-lyr{position:absolute;inset:0;pointer-events:none;}
+#pins-lyr.pm{pointer-events:all;}
+
+/* ── PINES ── */
+.pin-anc{position:absolute;width:0;height:0;}
+.pin-wrap{position:absolute;left:-10px;top:-28px;display:flex;align-items:flex-start;gap:3px;transform:scale(var(--ps,1));transform-origin:10px 28px;pointer-events:all;cursor:pointer;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6));}
+.pin-wrap img{display:block;width:20px;height:28px;flex-shrink:0;}
+.pin-lbl{margin-top:3px;background:rgba(13,17,23,.88);color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:8px;border:1.5px solid rgba(255,255,255,.2);white-space:nowrap;line-height:1.3;backdrop-filter:blur(4px);}
+@keyframes pinBlink{0%,100%{transform:scale(var(--ps,1));}50%{transform:scale(calc(var(--ps,1)*2.2));opacity:.2;}}
+.pin-wrap.blinking{animation:pinBlink .4s ease-in-out 5;}
+
+/* ── LOADING ── */
+#ld{display:none;position:absolute;inset:0;background:#0d1117ee;z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#ld.on{display:flex;}
+.ld-sp{width:48px;height:48px;border:3px solid #30363d;border-top-color:#22d3a8;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-msg{font-size:13px;font-weight:700;color:#8b949e;text-align:center;max-width:280px;line-height:1.5;}
+.ld-bar-wrap{width:200px;height:4px;background:#30363d;border-radius:2px;overflow:hidden;}
+.ld-bar{height:100%;background:#22d3a8;width:0%;transition:width .2s;border-radius:2px;}
+#qual-badge{display:none;position:absolute;top:8px;left:8px;background:#161b22cc;border:1px solid #30363d;border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:#8b949e;z-index:5;cursor:pointer;gap:5px;align-items:center;}
+#qual-badge.on{display:flex;}
+#qual-badge:hover{border-color:#22d3a8;color:#22d3a8;}
+#relocate-pill{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#f97316ee;color:#fff;font-weight:800;font-size:11px;padding:8px 18px;border-radius:24px;white-space:nowrap;z-index:15;cursor:pointer;}
+#relocate-pill.on{display:block;}
+#pill{display:none;position:absolute;bottom:68px;left:50%;transform:translateX(-50%);background:#f97316ee;color:#fff;font-weight:800;font-size:11px;padding:8px 18px;border-radius:24px;pointer-events:none;white-space:nowrap;z-index:10;}
+#pill.on{display:block;}
+#kbhint{display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#ffffff28;pointer-events:none;z-index:5;white-space:nowrap;}
+@media(hover:hover){#kbhint{display:block;}}
+
+/* ── FOOTER VIEWER ── */
+#vftr{display:flex;align-items:center;gap:4px;padding:6px 8px;background:#161b22;border-top:1px solid #30363d;flex-shrink:0;height:52px;}
+.vfb{min-width:34px;height:34px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none;font-weight:800;padding:0 5px;transition:background .12s;}
+.vfb:hover{background:#30363d;}
+.vfl{font-size:11px;color:#8b949e;min-width:36px;text-align:center;flex-shrink:0;}
+#pin-fab{width:44px;height:44px;border-radius:50%;background:#21262d;border:2px solid #30363d;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;user-select:none;}
+#pin-fab.on{background:#f9731622;border-color:#f97316;box-shadow:0 0 14px #f9731666;}
+
+/* ── PIN VIEWER ── */
+#pv{display:none;position:fixed;inset:0;background:#000;z-index:150;flex-direction:column;}
+#pv.on{display:flex;}
+#pv-bar{position:absolute;top:0;left:0;right:0;z-index:10;background:linear-gradient(#000d,transparent);padding:14px 12px 36px;display:flex;align-items:center;gap:8px;}
+#pv-back{background:none;border:none;color:#fff;font-size:26px;font-weight:800;cursor:pointer;padding:2px 8px 2px 0;flex-shrink:0;}
+#pv-catinfo{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+#pv-icon{font-size:16px;flex-shrink:0;}
+#pv-label{font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#pv-cnt{font-size:11px;color:#ffffff77;font-weight:700;flex-shrink:0;}
+.pv-act{background:none;border:none;color:#ffffffaa;font-size:18px;cursor:pointer;padding:4px 6px;transition:color .12s;}
+.pv-act:hover{color:#fff;}
+#pv-stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+#pv-img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;transform-origin:center;will-change:transform;user-select:none;-webkit-user-drag:none;}
+#pv-noph{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#pv-noph-ico{font-size:64px;}
+#pv-noph-num{font-size:48px;font-weight:800;color:#fff;}
+.pv-nav{position:absolute;top:50%;transform:translateY(-50%);background:#0008;border:none;color:#fff;font-size:28px;font-weight:800;width:42px;height:72px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;transition:background .12s;}
+.pv-nav:hover{background:#000b;}
+.pv-nav.hidden{opacity:0;pointer-events:none;}
+#pv-prev{left:0;border-radius:0 4px 4px 0;}
+#pv-next{right:0;border-radius:4px 0 0 4px;}
+#pv-info{position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(transparent,#0008 40%,#000d);padding:36px 16px 28px;}
+#pv-nota-card{background:rgba(6,10,16,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:12px;padding:14px 16px;border-left:4px solid var(--cc,#22d3a8);margin-bottom:10px;}
+#pv-nota{font-size:16px;font-weight:700;color:#fff;line-height:1.55;}
+#pv-nota.vacia{font-size:13px;color:#ffffff44;font-style:italic;font-weight:400;}
+#pv-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+#pv-meta{font-size:11px;color:#ffffff66;flex:1;}
+#pv-locate-btn{background:rgba(6,10,16,.8);backdrop-filter:blur(8px);border:1px solid #30363d;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:800;color:#22d3a8;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+#pv-dots{display:flex;justify-content:center;gap:5px;}
+.pvdot{width:6px;height:6px;border-radius:50%;background:#ffffff33;flex-shrink:0;transition:all .15s;}
+.pvdot.on{background:#fff;transform:scale(1.3);}
+
+/* ── MODALS ── */
+.ov{display:none;position:fixed;inset:0;background:#00000099;z-index:100;align-items:flex-end;justify-content:center;}
+.ov.on{display:flex;}
+#m-confirm{z-index:500;}
+.md{background:#161b22;border:1px solid #30363d;border-radius:16px 16px 0 0;padding:20px 16px 36px;width:100%;max-width:540px;max-height:90dvh;overflow-y:auto;}
+.md-pin{display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:90dvh;}
+.md-pin .pin-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px;}
+.md-pin .pin-ttl{font-weight:800;font-size:14px;color:#22d3a8;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.md-pin .pin-topbtns{display:flex;gap:8px;flex-shrink:0;}
+.md-pin .pin-topbtns .bsec{padding:7px 12px;font-size:12px;border-radius:8px;}
+.md-pin .pin-topbtns .bpri{padding:7px 16px;font-size:12px;border-radius:8px;flex:unset;}
+.md-pin .pin-scroll{flex:1;overflow-y:auto;padding:12px 16px 28px;}
+.mdttl{font-weight:800;font-size:15px;color:#22d3a8;margin-bottom:14px;}
+.mlbl{font-size:10px;font-weight:700;color:#8b949e;letter-spacing:1px;text-transform:uppercase;margin:12px 0 5px;display:block;}
+.inp{width:100%;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:'Montserrat',sans-serif;font-size:14px;padding:10px 12px;outline:none;}
+.inp:focus{border-color:#22d3a8;}
+textarea.inp{min-height:72px;resize:vertical;font-size:14px;line-height:1.5;}
+.brow{display:flex;gap:8px;margin-top:16px;}
+.bpri{flex:1;padding:13px 0;border-radius:10px;border:none;background:#22d3a8;color:#0d1117;font-weight:800;font-size:14px;cursor:pointer;}
+.bpri:hover{filter:brightness(1.1);}
+.bsec{padding:13px 14px;border-radius:10px;border:1px solid #30363d;background:transparent;color:#8b949e;font-weight:700;font-size:14px;cursor:pointer;}
+.bdng{flex:1;padding:13px 0;border-radius:10px;border:2px solid #ef4444;background:transparent;color:#ef4444;font-weight:800;font-size:14px;cursor:pointer;}
+.bdng:hover{background:#ef444411;}
+.cgrid{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.cpk{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .12s;}
+.cpk.sel{border-color:#fff;transform:scale(1.15);}
+.catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.cb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border-radius:9px;border:2px solid #30363d;background:#21262d;cursor:pointer;transition:all .12s;position:relative;}
+.cb.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);}
+.cb .ci{font-size:18px;line-height:1.2;}
+.cb .cl{font-size:9px;font-weight:700;color:#8b949e;text-align:center;}
+.cb.sel .cl{color:var(--c);}
+.cb .cx{position:absolute;top:2px;right:3px;font-size:10px;color:#8b949e;background:#0d111799;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.emoji-btn{width:38px;height:38px;border-radius:8px;background:#21262d;border:2px solid transparent;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.emoji-btn.sel{border-color:#22d3a8;}
+.foto-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fotobtn{display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 0;border-radius:8px;border:1px dashed #30363d;background:#21262d;color:#8b949e;font-weight:700;font-size:12px;cursor:pointer;font-family:'Montserrat',sans-serif;width:100%;}
+.fotobtn:hover,.fotobtn:active{border-color:#22d3a8;color:#22d3a8;}
+.fwrap{display:none;margin-top:8px;position:relative;}
+#fprev{width:100%;border-radius:8px;border:1px solid #30363d;display:block;object-fit:contain;background:#0d1117;max-height:200px;cursor:zoom-in;}
+.fhint{position:absolute;bottom:8px;right:8px;background:#0009;color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:10px;pointer-events:none;}
+
+/* LIST */
+#lp{display:none;position:fixed;inset:0;top:auto;height:82dvh;background:#161b22;border-top:2px solid #22d3a8;border-radius:16px 16px 0 0;z-index:80;flex-direction:column;}
+#lp.on{display:flex;}
+#lp-hdr{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30363d;flex-shrink:0;}
+#lp-ttl{font-weight:800;font-size:15px;}
+#lscroll{flex:1;overflow-y:auto;}
+.lcat-hdr{padding:8px 16px;background:#0d1117;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.litem{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;border-bottom:1px solid #21262d;}
+.litem:hover,.litem:active{background:#21262d;}
+.lbdg{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;flex-shrink:0;}
+.llbl{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lmeta{font-size:10px;color:#8b949e;margin-top:2px;}
+.lthumb{width:44px;height:44px;border-radius:6px;object-fit:cover;border:1px solid #30363d;flex-shrink:0;}
+.lempty{padding:32px;color:#8b949e;font-size:13px;text-align:center;}
+
+/* TOAST */
+#toast{display:none;position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#21262d;border:1px solid #30363d;border-radius:24px;padding:8px 18px;font-size:12px;font-weight:700;color:#e6edf3;z-index:300;white-space:nowrap;pointer-events:none;}
+#toast.on{display:block;}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:#000d;z-index:400;align-items:center;justify-content:center;}
+#lightbox.on{display:flex;}
+#lightbox img{max-width:92%;max-height:92%;object-fit:contain;border-radius:8px;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#161b22;}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- OBRAS -->
+<div id="s-obras" class="scr on">
+  <div class="hdr">
+    <span class="logo">📍 ObraPines</span>
+    <div class="sp"></div>
+    <div class="ibtn" onclick="openP2P()" title="Sincronizar directo (QR)">📡</div>
+    <div class="ibtn" onclick="importBackup()" title="Importar respaldo">📥</div>
+    <div class="ibtn" onclick="exportBackup()" title="Exportar respaldo">📤</div>
+    <input type="file" id="fi-sync" accept=".json,application/json" onchange="SYNC.import(this)"/>
+  </div>
+  <div id="obras-list" class="clist"></div>
+  <button class="fab" onclick="openNewObra()">+</button>
+</div>
+
+<!-- ARCHIVOS -->
+<div id="s-files" class="scr">
+  <div class="hdr">
+    <button class="back" onclick="goObras()">‹</button>
+    <span class="logo" id="files-ttl" style="font-size:13px"></span>
+    <div class="sp"></div>
+    <div class="ibtn" onclick="Q('fi-pdf').click()" title="Agregar PDF">📄<span style="font-size:9px;position:absolute;bottom:4px;right:3px;color:#22d3a8;font-weight:800;">+</span></div>
+    <input type="file" id="fi-pdf" accept="application/pdf" onchange="addPDF(this)"/>
+  </div>
+  <div id="files-list" class="clist"></div>
+</div>
+
+<!-- VIEWER -->
+<div id="s-viewer" class="scr">
+  <div class="hdr">
+    <button class="back" onclick="goFiles()">‹</button>
+    <span style="flex:1;font-size:11px;color:#8b949e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="viewer-name"></span>
+    <div class="ibtn" id="folder-badge" onclick="folderTap()" title="Carpeta de fotos" style="display:none;font-size:15px;"></div>
+    <div class="ibtn" onclick="openReportModal()" title="Reporte">📊</div>
+    <div class="ibtn" onclick="openList()">🗂️<span class="badge" id="ev-badge">0</span></div>
+  </div>
+  <div id="vp">
+    <div id="ct"><div id="page-wrap"><img id="pdf-img" src="" alt="" draggable="false"/><div id="pins-lyr"></div></div></div>
+    <div id="ld"><div class="ld-sp"></div><div class="ld-msg" id="ld-msg">Procesando…</div><div class="ld-bar-wrap"><div class="ld-bar" id="ld-bar"></div></div></div>
+    <div id="qual-badge" onclick="improveQuality()">🔍 Mejorar calidad</div>
+    <div id="relocate-pill" onclick="cancelRelocate()">📍 Toca el plano para mover el pin · Toca aquí para cancelar</div>
+    <div id="pill">🎯 Modo PIN · Toca para colocar</div>
+    <div id="kbhint">Scroll=Pan · Ctrl+Scroll=Zoom · +/− Zoom · Flechas=Página · P=Pin · 0=Ajustar</div>
+  </div>
+  <div id="vftr">
+    <div class="vfb" id="v-prev" onclick="changePage(-1)">‹</div>
+    <span class="vfl" id="v-pg">1/1</span>
+    <div class="vfb" id="v-next" onclick="changePage(1)">›</div>
+    <div class="sp"></div>
+    <div class="vfb" onclick="zoomBy(1/1.4)" style="font-size:18px;">−</div>
+    <span class="vfl" id="v-zl">100%</span>
+    <div class="vfb" onclick="zoomBy(1.4)" style="font-size:18px;">+</div>
+    <div class="vfb" onclick="zoomFit()" style="font-size:12px;" title="[0]">⊡</div>
+    <div class="sp"></div>
+    <div id="pin-fab" onclick="togglePinMode()" title="[P]">📍</div>
+  </div>
+</div>
+
+<!-- PIN VIEWER -->
+<div id="pv">
+  <div id="pv-bar">
+    <button id="pv-back" onclick="closePV()">‹</button>
+    <div id="pv-catinfo"><span id="pv-icon"></span><span id="pv-label"></span></div>
+    <div class="sp"></div>
+    <span id="pv-cnt"></span>
+    <button class="pv-act" onclick="pvRelocate()" title="Mover en plano">📌</button>
+    <button class="pv-act" onclick="pvReplacePhoto()" title="Cambiar foto">📷</button>
+    <button class="pv-act" onclick="pvEdit()" title="Editar">✏️</button>
+    <button class="pv-act" onclick="pvDelete()" title="Eliminar">🗑️</button>
+    <input type="file" id="fi-replace" accept="image/*" style="display:none" onchange="doReplacePhoto(this)"/>
+  </div>
+  <div id="pv-stage">
+    <img id="pv-img" src="" alt=""/>
+    <div id="pv-noph"><div id="pv-noph-ico"></div><div id="pv-noph-num"></div></div>
+    <button class="pv-nav hidden" id="pv-prev" onclick="pvMove(-1)">‹</button>
+    <button class="pv-nav hidden" id="pv-next" onclick="pvMove(1)">›</button>
+  </div>
+  <div id="pv-info">
+    <div id="pv-nota-card"><p id="pv-nota"></p></div>
+    <div id="pv-meta-row"><span id="pv-meta"></span><button id="pv-locate-btn" onclick="locatePin()">📍 Ver en plano</button></div>
+    <div id="pv-dots"></div>
+  </div>
+</div>
+
+<!-- ── MODALES ── -->
+<div class="ov" id="m-confirm"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl" id="mc-ttl"></div>
+  <div id="mc-body"></div>
+  <div class="brow" id="mc-btns"></div>
+</div></div>
+
+<div class="ov" id="m-prompt"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl" id="mp-ttl"></div>
+  <div id="mp-body" style="margin-bottom:10px;"></div>
+  <input class="inp" type="text" id="mp-inp"/>
+  <div class="brow"><button class="bsec" id="mp-cancel">Cancelar</button><button class="bpri" id="mp-ok">Aceptar</button></div>
+</div></div>
+
+<div class="ov" id="m-obra"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl" id="m-obra-ttl">🏗️ Nueva Obra</div>
+  <span class="mlbl">Nombre</span>
+  <input class="inp" type="text" id="obra-name" placeholder="Ej: CHILENO GE-37, CASA ROCAS…" style="text-transform:uppercase;"/>
+  <span class="mlbl">Color</span><div class="cgrid" id="cgrid"></div>
+  <div class="brow"><button class="bsec" onclick="closeOv('m-obra')">Cancelar</button><button class="bpri" id="obra-save-btn" onclick="saveObra()">Crear</button></div>
+</div></div>
+
+<div class="ov" id="m-pin"><div class="md md-pin" onclick="event.stopPropagation()">
+  <div class="pin-topbar">
+    <div class="pin-ttl" id="m-pin-ttl">📍 Nueva Evidencia</div>
+    <div class="pin-topbtns">
+      <button class="bsec" onclick="closePinModal()">✕</button>
+      <button class="bpri" onclick="savePin()">Guardar ✓</button>
+    </div>
+  </div>
+  <div class="pin-scroll">
+    <span class="mlbl" style="margin-top:4px">Categoría</span>
+    <div class="catgrid" id="catgrid"></div>
+    <span class="mlbl">Nota / Descripción</span>
+    <textarea class="inp" id="pin-nota" placeholder="Describe detalladamente lo que observas…"></textarea>
+    <span class="mlbl">Responsable (opcional)</span>
+    <input class="inp" type="text" id="pin-resp" placeholder="Carpinteros, Instalaciones, LGH…" list="resp-list" autocomplete="off"/>
+    <datalist id="resp-list"><option value="Carpinteros"/><option value="Herrerería"/><option value="Instalaciones"/><option value="Plomería"/><option value="Electricidad"/><option value="Acabados"/><option value="Aplanados"/><option value="Impermeabilización"/><option value="LGH"/><option value="ASIPSA"/><option value="Residente"/></datalist>
+    <span class="mlbl">Foto</span>
+    <div class="foto-row" style="grid-template-columns:1fr 1fr 1fr;">
+      <label class="fotobtn">📷 Cámara<input type="file" id="fi-cam" accept="image/*,.heic,.heif" capture="environment" onchange="pickFoto(this,'cam')"/></label>
+      <label class="fotobtn">🖼️ Galería<input type="file" id="fi-gal" accept="image/*,.heic,.heif" onchange="pickFoto(this,'gal')"/></label>
+      <label class="fotobtn">💬 WhatsApp<input type="file" id="fi-wa" accept="image/*,.heic,.heif" onchange="pickFoto(this,'wa')"/></label>
+    </div>
+    <div id="sender-block" style="display:none;">
+      <span class="mlbl">Enviado por (opcional)</span>
+      <input class="inp" type="text" id="pin-sender" placeholder="Ej: Cabo Wilber Barrios, Residente Freddy…"/>
+    </div>
+    <div class="fwrap" id="fwrap"><img id="fprev" onclick="previewFoto()"/><div class="fhint">🔍 Tap para ver</div></div>
+    <div id="pin-date-block" style="display:none;">
+      <span class="mlbl">Fecha de evidencia (opcional)</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="inp" type="date" id="pin-date" style="flex:1;"/>
+        <input class="inp" type="time" id="pin-time" style="width:110px;flex-shrink:0;"/>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<div class="ov" id="m-cat"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl">🏷️ Nueva Categoría</div>
+  <span class="mlbl">Nombre</span><input class="inp" type="text" id="cat-name-inp" placeholder="Estructura, Acabados, Plafones…" maxlength="20"/>
+  <span class="mlbl">Ícono</span><div class="emoji-grid" id="emoji-grid"></div>
+  <span class="mlbl">Color</span><div class="cgrid" id="cat-col-grid"></div>
+  <div class="brow"><button class="bsec" onclick="closeOv('m-cat')">Cancelar</button><button class="bpri" onclick="saveCustomCat()">Crear</button></div>
+</div></div>
+
+<div class="ov" id="m-report"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl">📊 Reporte Fotográfico</div>
+  <span class="mlbl">Título</span>
+  <input class="inp" type="text" id="rep-title" placeholder="Reporte Fotográfico Semana 14"/>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+    <div><span class="mlbl" style="margin-top:0">Obra</span><input class="inp" type="text" id="rep-obra"/></div>
+    <div><span class="mlbl" style="margin-top:0">Semana</span><input class="inp" type="text" id="rep-semana"/></div>
+  </div>
+  <span class="mlbl">Ubicación</span>
+  <input class="inp" type="text" id="rep-ubicacion" placeholder="Chileno Bay, Los Cabos…"/>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+    <div><span class="mlbl" style="margin-top:0">Empresa</span><input class="inp" type="text" id="rep-empresa" placeholder="ASIPSA"/></div>
+    <div><span class="mlbl" style="margin-top:0">Elaboró</span><input class="inp" type="text" id="rep-elaboro" placeholder="Arq. Iván Romero"/></div>
+  </div>
+  <span class="mlbl">Categorías a incluir</span>
+  <div id="rep-cats" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;"></div>
+  <div class="brow"><button class="bsec" onclick="closeOv('m-report')">Cancelar</button><button class="bpri" onclick="generateReport()">📄 Generar</button></div>
+</div></div>
+
+<div class="ov" id="m-pages"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl">📄 PDF Multipágina</div>
+  <p id="m-pages-msg" style="color:#8b949e;font-size:13px;line-height:1.7;white-space:pre-line;margin-bottom:16px;"></p>
+  <div class="brow">
+    <button class="bsec" onclick="onPagesChoice('first')">Solo pág. 1</button>
+    <button class="bpri" id="m-pages-all-btn" onclick="onPagesChoice('all')">Pre-renderizar todo</button>
+  </div>
+</div></div>
+
+<div class="ov" id="m-reload"><div class="md" onclick="event.stopPropagation()">
+  <div class="mdttl">📄 Recargar PDF</div>
+  <p style="color:#8b949e;font-size:13px;line-height:1.6;margin-bottom:6px;">Tus pines están guardados. Selecciona el mismo archivo PDF.</p>
+  <p id="reload-fname" style="font-size:13px;font-weight:700;color:#22d3a8;margin-bottom:4px;"></p>
+  <div class="brow">
+    <button class="bsec" onclick="pendingReloadPdf=null;closeOv('m-reload')">Cancelar</button>
+    <label class="bpri" style="display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;">📄 Seleccionar<input type="file" id="fi-reload" accept="application/pdf" onchange="reloadPDF(this)"/></label>
+  </div>
+</div></div>
+
+<!-- MODAL P2P SINCRONIZACIÓN DIRECTA -->
+<div class="ov" id="m-p2p"><div class="md" onclick="event.stopPropagation()">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="mdttl" style="margin-bottom:0;">📡 Sincronización directa</div>
+    <button class="bsec" style="padding:7px 12px;" onclick="P2P.close()">✕</button>
+  </div>
+  <div id="m-p2p-body"></div>
+</div></div>
+
+<div id="lp">
+  <div id="lp-hdr"><span id="lp-ttl">Evidencias</span><button style="background:none;border:none;color:#8b949e;font-size:22px;cursor:pointer;" onclick="closeList()">✕</button></div>
+  <div id="lscroll"></div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()"><img id="lb-img" src="" alt=""/></div>
+<div id="toast"></div>
+<script>
+// ── Worker pdf.js ──────────────────────────────────────────────────────────
+(async()=>{
+  try{const r=await fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');
+    if(r.ok){const b=await r.blob();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);return;}}catch(_){}
+  pdfjsLib.GlobalWorkerOptions.workerSrc='';
+})();
+const Q=id=>document.getElementById(id);
+
+// ══════════════════════════════════════════════════════════════════════════
+// CATEGORÍAS
+// ══════════════════════════════════════════════════════════════════════════
+const DEFAULT_CATS=[
+  {id:'avance',   label:'Avance',   color:'#22d3a8',icon:'📐'},
+  {id:'defecto',  label:'Defecto',  color:'#f97316',icon:'⚠️'},
+  {id:'material', label:'Material', color:'#60a5fa',icon:'🧱'},
+  {id:'urgente',  label:'Urgente',  color:'#ef4444',icon:'🚨'},
+  {id:'bitacora', label:'Bitácora', color:'#a78bfa',icon:'📝'},
+];
+const EMOJI_OPTS=['🏗️','🧱','🔨','⚡','💧','🪟','🚪','💡','🔌','🪜','📋','🔍','🎨','🪣','🛠️','🔧','🏠','🌡️','🗂️','🪤'];
+const PCOLS=['#22d3a8','#f97316','#60a5fa','#ef4444','#a78bfa','#fbbf24','#34d399','#fb923c','#e879f9','#38bdf8'];
+let customCats=[];
+const allCats=()=>[...DEFAULT_CATS,...customCats];
+const cat=id=>allCats().find(c=>c.id===id)||DEFAULT_CATS[0];
+
+// ══════════════════════════════════════════════════════════════════════════
+// INDEXEDDB — PDFs (store 'pdfs') + handles de carpeta (store 'handles')
+// ══════════════════════════════════════════════════════════════════════════
+const DB={
+  _db:null,
+  async open(){
+    if(this._db)return this._db;
+    this._db=await new Promise((res,rej)=>{
+      const r=indexedDB.open('obrapines_db',2);
+      r.onupgradeneeded=e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains('pdfs'))db.createObjectStore('pdfs',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('handles'))db.createObjectStore('handles',{keyPath:'id'});
+      };
+      r.onsuccess=e=>res(e.target.result);
+      r.onerror=()=>rej(r.error);
+    });
+    return this._db;
+  },
+  async put(id,ab){
+    try{const db=await this.open();await new Promise((res,rej)=>{const tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').put({id,data:ab});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});}catch(e){console.warn('DB write fail',e);}
+  },
+  async get(id){
+    try{const db=await this.open();return await new Promise((res,rej)=>{const r=db.transaction('pdfs').objectStore('pdfs').get(id);r.onsuccess=()=>res(r.result?.data||null);r.onerror=()=>rej(r.error);});}catch{return null;}
+  },
+  async del(id){
+    try{const db=await this.open();await new Promise((res,rej)=>{const r=db.transaction('pdfs','readwrite').objectStore('pdfs').delete(id);r.onsuccess=res;r.onerror=()=>rej(r.error);});}catch(e){console.warn('DB del fail',e);}
+  },
+  async putHandle(id,handle){
+    try{const db=await this.open();await new Promise((res,rej)=>{const tx=db.transaction('handles','readwrite');tx.objectStore('handles').put({id,data:handle});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});}catch(e){console.warn('putHandle',e);}
+  },
+  async getHandle(id){
+    try{const db=await this.open();return await new Promise((res,rej)=>{const r=db.transaction('handles').objectStore('handles').get(id);r.onsuccess=()=>res(r.result?.data||null);r.onerror=()=>rej(r.error);});}catch{return null;}
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+// EXPORTAR FOTOS A CARPETA DEL TELÉFONO (R0m3r014)
+// Opción A: File System Access API (Chrome Android) → carpeta real ObraPines/Obra/Plano/
+// Opción B (fallback): descarga a carpeta Descargas con la ruta en el nombre
+// ══════════════════════════════════════════════════════════════════════════
+const FOLDER={
+  root:null,
+  supported:('showDirectoryPicker' in window),
+  clean(s){return (s||'').toString().trim().replace(/[\/\\:*?"<>|]+/g,'').replace(/\s+/g,' ').toUpperCase()||'SIN_NOMBRE';},
+  compact(s){return this.clean(s).replace(/\s+/g,'');},
+
+  async restore(){
+    if(!this.supported){this.updateBadge();return;}
+    try{
+      const h=await DB.getHandle('folder_root');
+      if(h){
+        this.root=h;
+        const perm=await h.queryPermission?.({mode:'readwrite'});
+        this.updateBadge(perm==='granted'?null:'pend');
+      }else this.updateBadge('none');
+    }catch(_){this.updateBadge('none');}
+  },
+
+  async pick(){
+    if(!this.supported){
+      await showAlert('Carpeta no disponible','Tu navegador no permite elegir carpeta directamente.\n\nLas fotos se descargan a la carpeta DESCARGAS con un nombre claro:\nOBRA__PLANO__##.jpg');
+      return false;
+    }
+    try{
+      const h=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+      this.root=h;
+      await DB.putHandle('folder_root',h);
+      this.updateBadge();
+      toast('✓ Carpeta ObraPines conectada');
+      return true;
+    }catch(e){if(e.name!=='AbortError')console.warn('pick',e);return false;}
+  },
+
+  async ensurePerm(){
+    if(!this.root)return false;
+    let perm=await this.root.queryPermission({mode:'readwrite'});
+    if(perm==='granted')return true;
+    try{perm=await this.root.requestPermission({mode:'readwrite'});}catch(_){perm='denied';}
+    this.updateBadge(perm==='granted'?null:'pend');
+    return perm==='granted';
+  },
+
+  async subDir(parent,name){return await parent.getDirectoryHandle(this.clean(name),{create:true});},
+
+  // Guarda UNA foto del pin → ObraPines/OBRA/PLANO/OBRA_PLANO_##.jpg
+  async savePhoto(dataURL,obraName,pdfName,pinId){
+    if(!dataURL)return false;
+    let blob;
+    try{blob=await (await fetch(dataURL)).blob();}catch(e){console.warn('blob',e);return false;}
+    const fname=`${this.compact(obraName)}_${this.compact(pdfName)}_${String(pinId).padStart(2,'0')}.jpg`;
+
+    // Opción A: carpeta real
+    if(this.supported&&this.root&&await this.ensurePerm()){
+      try{
+        const obraDir=await this.subDir(this.root,obraName);
+        const pdfDir=await this.subDir(obraDir,pdfName);
+        const fh=await pdfDir.getFileHandle(fname,{create:true});
+        const w=await fh.createWritable();
+        await w.write(blob);await w.close();
+        toast(`✓ Guardada en ${this.clean(obraName)}/${this.clean(pdfName)}/`,3000);
+        return true;
+      }catch(e){console.warn('savePhoto FS',e);}
+    }
+
+    // Opción B: descarga a Descargas
+    const dlName=`${this.compact(obraName)}__${this.compact(pdfName)}__${String(pinId).padStart(2,'0')}.jpg`;
+    try{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=dlName;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      toast(`✓ Descargada: ${dlName}`,3500);
+    }catch(e){console.warn('download',e);}
+    return false;
+  },
+
+  updateBadge(state){
+    const b=Q('folder-badge');if(!b)return;
+    b.style.display='flex';
+    if(!this.supported){b.textContent='⬇️';b.style.color='#8b949e';b.title='Fotos van a Descargas';return;}
+    if(this.root&&!state){b.textContent='📁';b.style.color='#22d3a8';b.title='Carpeta conectada · toca para cambiar';}
+    else if(state==='pend'){b.textContent='📁';b.style.color='#f97316';b.title='Toca para reactivar permiso de carpeta';}
+    else{b.textContent='📁';b.style.color='#8b949e';b.title='Toca para elegir carpeta de fotos';}
+  }
+};
+async function folderTap(){
+  if(!FOLDER.supported){
+    await showAlert('Carpeta no disponible','Tu navegador (o iPhone) no permite elegir carpeta.\n\nLas fotos se descargan a DESCARGAS con nombre claro: OBRA__PLANO__##.jpg');
+    return;
+  }
+  if(FOLDER.root){
+    const ok=await showConfirm('📁 Carpeta de fotos','La carpeta ya está conectada.\n\n¿Quieres elegir otra carpeta diferente?',{ok:'Elegir otra',cancel:'Mantener'});
+    if(!ok){await FOLDER.ensurePerm();return;}
+  }
+  await FOLDER.pick();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// MODALES PERSONALIZADOS
+// ══════════════════════════════════════════════════════════════════════════
+let _mresolve=null;
+function showConfirm(title,msg,{ok='Confirmar',cancel='Cancelar',danger=false}={}){
+  return new Promise(res=>{
+    _mresolve=res;
+    Q('mc-ttl').innerHTML=title;
+    Q('mc-body').innerHTML=`<p style="color:#8b949e;font-size:13px;line-height:1.7;white-space:pre-line;margin-bottom:4px;">${msg}</p>`;
+    const row=Q('mc-btns');row.innerHTML='';row.style.flexDirection='row';
+    if(cancel){const bc=document.createElement('button');bc.className='bsec';bc.textContent=cancel;bc.onclick=()=>{closeOv('m-confirm');res(false);};row.appendChild(bc);}
+    const bo=document.createElement('button');bo.className=danger?'bdng':'bpri';bo.textContent=ok;bo.style.flex='1';bo.onclick=()=>{closeOv('m-confirm');res(true);};
+    row.appendChild(bo);
+    pushNav();openOv('m-confirm');
+  });
+}
+function showAlert(title,msg){return showConfirm(title,msg,{ok:'Aceptar',cancel:''}).then(()=>{});}
+function showPrompt(title,placeholder='',def=''){
+  return new Promise(res=>{
+    Q('mp-ttl').textContent=title;
+    Q('mp-body').innerHTML='';
+    const inp=Q('mp-inp');inp.placeholder=placeholder;inp.value=def;inp.type='text';
+    Q('mp-ok').onclick=()=>{closeOv('m-prompt');res(inp.value.trim()||null);};
+    Q('mp-cancel').onclick=()=>{closeOv('m-prompt');res(null);};
+    inp.onkeydown=e=>{if(e.key==='Enter'){closeOv('m-prompt');res(inp.value.trim()||null);}if(e.key==='Escape'){closeOv('m-prompt');res(null);}};
+    pushNav();openOv('m-prompt');setTimeout(()=>inp.focus(),120);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PERSISTENCIA
+// ══════════════════════════════════════════════════════════════════════════
+function persist(){try{localStorage.setItem('obrapines_v1',JSON.stringify(obras));}catch(_){toast('⚠️ Storage lleno');}}
+function persistCats(){try{localStorage.setItem('obrapines_cats',JSON.stringify(customCats));}catch(_){}}
+async function loadData(){
+  try{const r=localStorage.getItem('obrapines_v1');if(!r)return;obras=JSON.parse(r);
+    obras.forEach(o=>{nObraId=Math.max(nObraId,o.id+1);o.pdfs.forEach(f=>{nPdfId=Math.max(nPdfId,f.id+1);});});
+  }catch(_){obras=[];}
+  try{const r=localStorage.getItem('obrapines_cats');if(r)customCats=JSON.parse(r);}catch(_){}
+  for(const o of obras)for(const f of o.pdfs){
+    if(!docCache[f.id]){
+      const ab=await DB.get(f.id);
+      if(ab){try{const doc=await pdfjsLib.getDocument({data:ab}).promise;docCache[f.id]=doc;}catch(_){}}
+    }
+  }
+}
+
+function toast(msg,ms=2600){const t=Q('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),ms);}
+function compressImage(src,maxW=1280,q=0.82){
+  return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,maxW/img.width);const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q));};img.onerror=()=>res(src);img.src=src;});
+}
+function makePinSVG(color){
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 28"><path d="M10 1C5.6 1 2 4.6 2 9c0 5.8 8 18 8 18s8-12.2 8-18C18 4.6 14.4 1 10 1z" fill="${color}" stroke="rgba(255,255,255,0.55)" stroke-width="0.9"/><circle cx="10" cy="9" r="5" fill="rgba(255,255,255,0.88)"/></svg>`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+let obras=[],nObraId=1,nPdfId=1;
+let actObra=null,actPdf=null,viewPage=1;
+const docCache={},pageCache={};
+let zl=1,tx=0,ty=0,fitW=0,fitH=0;
+let pinMode=false,pendXY=null,editPinId=null,relocatingPinId=null;
+let selCat='avance',formFoto=null,fotoFecha=null,selCol=PCOLS[0];
+let pvPins=[],pvIdx=0,pendingReloadPdf=null,pendingPdfAdd=null;
+let imgZl=1,imgTx=0,imgTy=0,imgPinch0=null,imgPan0=null;
+let newCatEmoji='🏗️',newCatColor=PCOLS[0];
+let editingObraId=null,repCatFilter=[];
+const REP_PREFS='obrapines_repprefs';
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANDROID BACK
+// ══════════════════════════════════════════════════════════════════════════
+window.addEventListener('popstate',()=>{
+  if(Q('lightbox').classList.contains('on')){closeLightbox();return;}
+  if(Q('pv').classList.contains('on')){_closePV();return;}
+  if(Q('lp').classList.contains('on')){Q('lp').classList.remove('on');return;}
+  if(Q('m-pin').classList.contains('on')){_closePinModal();return;}
+  if(Q('m-confirm').classList.contains('on')){closeOv('m-confirm');if(_mresolve){_mresolve(false);_mresolve=null;}return;}
+  if(Q('m-prompt').classList.contains('on')){closeOv('m-prompt');return;}
+  if(Q('m-cat').classList.contains('on')){closeOv('m-cat');return;}
+  if(Q('m-obra').classList.contains('on')){closeOv('m-obra');return;}
+  if(Q('m-report').classList.contains('on')){closeOv('m-report');return;}
+  if(Q('m-p2p').classList.contains('on')){P2P.close();return;}
+  if(Q('m-reload').classList.contains('on')){pendingReloadPdf=null;closeOv('m-reload');return;}
+});
+function pushNav(){history.pushState({ob:true},'');}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SCREEN NAV
+// ══════════════════════════════════════════════════════════════════════════
+const show=id=>{document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));Q(id).classList.add('on');};
+const goObras=()=>{show('s-obras');renderObrasList();};
+const goFiles=()=>{show('s-files');renderFilesList();};
+const goViewer=()=>show('s-viewer');
+
+// ══════════════════════════════════════════════════════════════════════════
+// OBRAS
+// ══════════════════════════════════════════════════════════════════════════
+function renderObrasList(){
+  const el=Q('obras-list');el.innerHTML='';
+  if(!obras.length){el.innerHTML=`<div class="empty"><div class="empty-ico">🏗️</div><h3>Sin obras</h3><p>Crea tu primera obra para documentar evidencias de campo.</p><button class="empty-btn" onclick="openNewObra()">+ Nueva Obra</button></div>`;return;}
+  obras.forEach(o=>{
+    const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
+    const d=document.createElement('div');d.className='card';
+    d.innerHTML=`<div class="card-main">
+      <div class="cdot" style="background:${o.color}"></div>
+      <div class="cinfo"><div class="cname">${o.name}</div><div class="cmeta">${o.pdfs.length} PDF · ${pins} evidencia${pins!==1?'s':''}</div></div>
+      <div class="carr">›</div></div>
+    <div class="card-actions">
+      <button class="cact-btn" onclick="editObra(event,'${o.id}')">✏️ Editar</button>
+      <div class="cact-sep"></div>
+      <button class="cact-btn danger" onclick="deleteObra(event,'${o.id}')">🗑️ Borrar</button>
+    </div>`;
+    d.querySelector('.card-main').onclick=()=>{actObra=o;Q('files-ttl').textContent=o.name;goFiles();};
+    el.appendChild(d);
+  });
+}
+function openNewObra(){editingObraId=null;Q('m-obra-ttl').textContent='🏗️ Nueva Obra';Q('obra-name').value='';Q('obra-save-btn').textContent='Crear';selCol=PCOLS[0];buildColGrid();pushNav();openOv('m-obra');setTimeout(()=>Q('obra-name').focus(),120);}
+function editObra(ev,id){
+  ev.stopPropagation();const o=obras.find(x=>x.id==id);if(!o)return;
+  editingObraId=o.id;Q('m-obra-ttl').textContent='✏️ Editar Obra';Q('obra-name').value=o.name;Q('obra-save-btn').textContent='Guardar';
+  selCol=o.color;buildColGrid();pushNav();openOv('m-obra');setTimeout(()=>Q('obra-name').focus(),120);
+}
+async function deleteObra(ev,id){
+  ev.stopPropagation();const o=obras.find(x=>x.id==id);if(!o)return;
+  const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
+  const fotos=o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0);
+  let msg=`¿Eliminar la obra "${o.name}"?\n`;
+  if(pins>0)msg+=`\nContiene ${o.pdfs.length} archivo${o.pdfs.length!==1?'s':''} con ${pins} evidencia${pins!==1?'s':''} y ${fotos} foto${fotos!==1?'s':''}.`;
+  msg+='\n\nEsta acción no se puede deshacer.';
+  const ok=await showConfirm('🗑️ Borrar Obra',msg,{ok:'Eliminar',danger:true});
+  if(!ok)return;
+  for(const f of o.pdfs){
+    for(let i=1;i<=(f.pageCount||1);i++){const k=`${f.id}_${i}`;if(pageCache[k]){URL.revokeObjectURL(pageCache[k].blobURL);delete pageCache[k];}}
+    delete docCache[f.id];await DB.del(f.id);
+  }
+  obras=obras.filter(x=>x.id!=id);persist();renderObrasList();
+}
+function buildColGrid(){const g=Q('cgrid');g.innerHTML='';PCOLS.forEach(c=>{const d=document.createElement('div');d.className='cpk'+(c===selCol?' sel':'');d.style.background=c;d.onclick=()=>{selCol=c;buildColGrid();};g.appendChild(d);});}
+function saveObra(){
+  const n=Q('obra-name').value.trim().toUpperCase();if(!n)return Q('obra-name').focus();
+  if(editingObraId!==null){const o=obras.find(x=>x.id==editingObraId);if(o){o.name=n;o.color=selCol;if(actObra?.id==editingObraId){actObra.name=n;actObra.color=selCol;Q('files-ttl').textContent=n;}}}
+  else obras.push({id:nObraId++,name:n,color:selCol,pdfs:[]});
+  closeOv('m-obra');renderObrasList();persist();editingObraId=null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ARCHIVOS
+// ══════════════════════════════════════════════════════════════════════════
+function renderFilesList(){
+  const el=Q('files-list');el.innerHTML='';
+  if(!actObra||!actObra.pdfs.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📄</div><h3>Sin PDFs</h3><p>Agrega el primer plano de esta obra.</p><button class="empty-btn" onclick="Q('fi-pdf').click()">📄 Agregar PDF</button></div>`;return;}
+  actObra.pdfs.forEach(f=>{
+    const noDoc=!docCache[f.id];
+    const d=document.createElement('div');d.className='card';
+    d.innerHTML=`<div class="card-main">
+      <div class="cdot" style="background:${actObra.color}${noDoc?'44':''}"></div>
+      <div class="cinfo">
+        <div class="cname" id="cname-${f.id}">${f.displayName||f.name.replace(/\.pdf$/i,'')}</div>
+        <div class="cmeta">${noDoc?'⟳ Recargar · ':''}${f.pageCount||'?'} pág. · ${f.pins.length} evidencia${f.pins.length!==1?'s':''}</div>
+      </div><div class="carr">›</div></div>
+    <div class="card-actions">
+      <button class="cact-btn" onclick="renamePDF(event,'${f.id}')">✏️ Renombrar</button>
+      <div class="cact-sep"></div>
+      <button class="cact-btn" onclick="duplicatePDF(event,'${f.id}')">⎘ Duplicar</button>
+      <div class="cact-sep"></div>
+      <button class="cact-btn danger" onclick="deletePDF(event,'${f.id}')">🗑️ Borrar</button>
+    </div>`;
+    d.querySelector('.card-main').onclick=()=>openViewerFor(f);
+    el.appendChild(d);
+  });
+}
+function renamePDF(ev,id){
+  ev.stopPropagation();const f=actObra.pdfs.find(x=>x.id==id);if(!f)return;
+  const el=Q(`cname-${id}`);const cur=f.displayName||f.name.replace(/\.pdf$/i,'');
+  el.innerHTML=`<input class="cname-inp" value="${cur}" id="ren-${id}" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${cur}';this.blur();}"/>`;
+  const inp=Q(`ren-${id}`);
+  inp.onblur=()=>{const v=inp.value.trim();if(v)f.displayName=v;persist();renderFilesList();};
+  inp.focus();inp.select();
+}
+
+function proposeNextName(name){
+  const m=name.match(/del\s+(\d+)\s+al\s+(\d+)\s+de\s+(\w+)/i);
+  if(m){const f=+m[1],t=+m[2],span=t-f,nf=t+2,nt=nf+span;return name.replace(/del\s+\d+\s+al\s+\d+\s+de\s+\w+/i,`del ${nf} al ${nt} de ${m[3]}`);}
+  const n=name.match(/(\d+)(\s*)$/);
+  if(n)return name.replace(/(\d+)(\s*)$/,(_,num,s)=>`${+num+1}${s}`);
+  return name+' 2';
+}
+
+async function duplicatePDF(ev,id){
+  ev.stopPropagation();const f=actObra.pdfs.find(x=>x.id==id);if(!f)return;
+  const cur=f.displayName||f.name.replace(/\.pdf$/i,'');
+  const proposed=proposeNextName(cur);
+  const newName=await showPrompt('⎘ Duplicar plano','Nombre para la copia',proposed);
+  if(!newName)return;
+  const copy={...f,id:nPdfId++,pins:[],nextPinId:1,displayName:newName};
+  actObra.pdfs.push(copy);
+  if(docCache[f.id])docCache[copy.id]=docCache[f.id];
+  // Copiar también el PDF en IndexedDB para que la copia sea independiente
+  const ab=await DB.get(f.id);if(ab)DB.put(copy.id,ab);
+  persist();renderFilesList();toast(`✓ Duplicado: "${newName}"`);
+}
+
+async function deletePDF(ev,id){
+  ev.stopPropagation();const f=actObra.pdfs.find(x=>x.id==id);if(!f)return;
+  const fotos=f.pins.filter(p=>p.foto).length;
+  let msg=`¿Eliminar "${f.displayName||f.name.replace(/\.pdf$/i,'')}"?`;
+  if(f.pins.length>0)msg+=`\n\nContiene ${f.pins.length} evidencia${f.pins.length!==1?'s':''}${fotos>0?` con ${fotos} foto${fotos!==1?'s':''}`:''}.`;
+  msg+='\n\nEsta acción no se puede deshacer.';
+  const ok=await showConfirm('🗑️ Borrar PDF',msg,{ok:'Eliminar',danger:true});
+  if(!ok)return;
+  for(let i=1;i<=(f.pageCount||1);i++){const k=`${f.id}_${i}`;if(pageCache[k]){URL.revokeObjectURL(pageCache[k].blobURL);delete pageCache[k];}}
+  delete docCache[f.id];await DB.del(f.id);
+  actObra.pdfs=actObra.pdfs.filter(x=>x.id!=id);persist();renderFilesList();toast('PDF eliminado');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CARGA PDF
+// ══════════════════════════════════════════════════════════════════════════
+async function addPDF(input){
+  const file=input.files[0];if(!file||!actObra)return;
+  setLoading('Cargando PDF…',5);
+  try{
+    const ab=await file.arrayBuffer();
+    const doc=await pdfjsLib.getDocument({data:ab}).promise;
+    const id=nPdfId++;docCache[id]=doc;
+    DB.put(id,ab);
+    const pdf={id,name:file.name,pageCount:doc.numPages,pins:[],nextPinId:1};
+    actObra.pdfs.push(pdf);persist();renderFilesList();
+    if(doc.numPages>3){
+      const est=Math.round(doc.numPages*7);
+      Q('m-pages-msg').textContent=`Este PDF tiene ${doc.numPages} páginas.\n\nPre-renderizar todo: ~${est} segundos pero cada página carga instantáneamente.\n\nO carga solo la primera y el resto se pre-renderiza al visitarlas.`;
+      Q('m-pages-all-btn').textContent=`Pre-renderizar todo (~${est}s)`;
+      pendingPdfAdd=pdf;setLoading(null);openOv('m-pages');
+    }else{await openViewerFor(pdf);}
+  }catch(e){setLoading(null);await showAlert('Error',`No se pudo cargar el PDF.\n${e.message}`);}
+  input.value='';
+}
+
+async function onPagesChoice(choice){
+  closeOv('m-pages');if(!pendingPdfAdd)return;
+  const pdf=pendingPdfAdd;pendingPdfAdd=null;
+  if(choice==='all'){
+    actPdf=pdf;viewPage=1;setPinMode(false);
+    Q('viewer-name').textContent=pdf.displayName||pdf.name.replace(/\.pdf$/i,'');
+    goViewer();
+    for(let i=1;i<=pdf.pageCount;i++){
+      setLoading(`Pre-renderizando ${i}/${pdf.pageCount}…`,Math.round((i-1)/pdf.pageCount*95));
+      await ensurePage(pdf.id,i);
+    }
+    await showPage(1);
+  }else{await openViewerFor(pdf);}
+}
+
+async function reloadPDF(input){
+  const file=input.files[0];if(!file||!pendingReloadPdf)return;
+  setLoading('Verificando…',10);
+  try{
+    const ab=await file.arrayBuffer();
+    const doc=await pdfjsLib.getDocument({data:ab}).promise;
+    if(pendingReloadPdf.pageCount&&doc.numPages!==pendingReloadPdf.pageCount){
+      setLoading(null);
+      const ok=await showConfirm('⚠️ PDF diferente',`El archivo seleccionado tiene ${doc.numPages} páginas pero el original tenía ${pendingReloadPdf.pageCount}.\n\n¿Continuar de todas formas?`,{ok:'Continuar'});
+      if(!ok){input.value='';return;}
+      setLoading('Cargando…',10);
+    }
+    docCache[pendingReloadPdf.id]=doc;
+    pendingReloadPdf.pageCount=doc.numPages;
+    DB.put(pendingReloadPdf.id,ab);
+    const pdf=pendingReloadPdf;pendingReloadPdf=null;
+    closeOv('m-reload');persist();await openViewerFor(pdf);
+  }catch(e){setLoading(null);await showAlert('Error',e.message);}
+  input.value='';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// VIEWER
+// ══════════════════════════════════════════════════════════════════════════
+function openViewerFor(pdf){
+  if(!docCache[pdf.id]){pendingReloadPdf=pdf;Q('reload-fname').textContent=pdf.displayName||pdf.name;openOv('m-reload');return;}
+  actPdf=pdf;viewPage=1;setPinMode(false);
+  Q('viewer-name').textContent=pdf.displayName||pdf.name.replace(/\.pdf$/i,'');
+  goViewer();loadPage(1);
+}
+async function loadPage(n){
+  viewPage=n;setLoading(`Cargando página ${n}…`,5);
+  try{const cached=await ensurePage(actPdf.id,n);await showPage(n,cached);}
+  catch(e){setLoading(null);await showAlert('Error',e.message);}
+}
+async function showPage(n,cached){
+  if(!cached){const k=`${actPdf.id}_${n}`;cached=pageCache[k];}
+  if(!cached)return;
+  const vpW=Q('vp').clientWidth;
+  fitW=vpW;fitH=Math.round(fitW*cached.renderH/cached.renderW);
+  Q('page-wrap').style.width=fitW+'px';Q('page-wrap').style.height=fitH+'px';
+  Q('pdf-img').src=cached.blobURL;
+  zl=1;tx=0;ty=0;applyTx();updateFtr();drawPins();setLoading(null);
+  Q('qual-badge').classList.toggle('on',cached.quality==='standard');
+  if(n<actPdf.pageCount)setTimeout(()=>ensurePage(actPdf.id,n+1,false,true).catch(()=>{}),600);
+}
+function changePage(d){const n=viewPage+d;if(!actPdf||n<1||n>actPdf.pageCount)return;loadPage(n);}
+function updateFtr(){
+  Q('v-pg').textContent=`${viewPage}/${actPdf.pageCount}`;
+  Q('v-zl').textContent=Math.round(zl*100)+'%';
+  Q('v-prev').style.opacity=viewPage<=1?'.3':'1';
+  Q('v-next').style.opacity=viewPage>=actPdf.pageCount?'.3':'1';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDER → JPEG cache → CSS transform
+// ══════════════════════════════════════════════════════════════════════════
+async function ensurePage(pdfId,pageNum,highQ=false,silent=false){
+  const key=`${pdfId}_${pageNum}`;
+  if(pageCache[key]&&!highQ)return pageCache[key];
+  const doc=docCache[pdfId];const page=await doc.getPage(pageNum);const nat=page.getViewport({scale:1});
+  const vpW=Math.max(window.innerWidth,screen.width||0,screen.availWidth||0);
+  const TARGET_W=Math.min(highQ?5000:3500,vpW*(highQ?4:2.5));
+  const scale=TARGET_W/nat.width;const vp=page.getViewport({scale});
+  const canvas=document.createElement('canvas');canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);
+  const task=page.render({canvasContext:canvas.getContext('2d'),viewport:vp});
+  if(!silent){task.onProgress=p=>{if(p.total)setLoading(`Procesando ${pageNum}/${actPdf?.pageCount||'?'}`,p.loaded/p.total*88);};}
+  await task.promise;
+  if(!silent)setLoading('Generando imagen…',96);
+  const blobURL=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(URL.createObjectURL(b)):rej('blob fail'),'image/jpeg',0.95));
+  pageCache[key]={blobURL,renderW:canvas.width,renderH:canvas.height,natW:nat.width,natH:nat.height,quality:highQ?'high':'standard'};
+  return pageCache[key];
+}
+
+async function improveQuality(){
+  if(!actPdf)return;
+  Q('qual-badge').classList.remove('on');
+  try{setLoading('Mejorando resolución al 4×…',10);await ensurePage(actPdf.id,viewPage,true);await showPage(viewPage);toast('✓ Calidad mejorada');}
+  catch(e){await showAlert('Error',e.message);}
+  setLoading(null);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TRANSFORM
+// ══════════════════════════════════════════════════════════════════════════
+function applyTx(){clamp();Q('ct').style.transform=`translate(${tx}px,${ty}px) scale(${zl})`;Q('pins-lyr').style.setProperty('--ps',(1/zl).toFixed(6));Q('v-zl').textContent=Math.round(zl*100)+'%';}
+function clamp(){const vW=Q('vp').clientWidth,vH=Q('vp').clientHeight;const cW=fitW*zl,cH=fitH*zl;tx=cW<=vW?(vW-cW)/2:Math.min(0,Math.max(vW-cW,tx));ty=cH<=vH?(vH-cH)/2:Math.min(0,Math.max(vH-cH,ty));}
+function setLoading(msg,pct=null){if(!msg){Q('ld').classList.remove('on');return;}Q('ld-msg').textContent=msg;if(pct!=null)Q('ld-bar').style.width=Math.round(pct)+'%';Q('ld').classList.add('on');}
+function zoomAtPt(sx,sy,nz){nz=Math.min(10,Math.max(0.1,nz));const lx=(sx-tx)/zl,ly=(sy-ty)/zl;tx=sx-lx*nz;ty=sy-ly*nz;zl=nz;applyTx();}
+function zoomBy(f){const v=Q('vp');zoomAtPt(v.clientWidth/2,v.clientHeight/2,zl*f);}
+function zoomFit(){zl=1;tx=0;ty=0;applyTx();}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TOUCH
+// ══════════════════════════════════════════════════════════════════════════
+let pan0=null,pinch0=null,moved=false,swipeX0=null,swipeY0=null;
+const vpEl=Q('vp');
+vpEl.addEventListener('touchstart',e=>{
+  moved=false;
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    pan0={x:t.clientX,y:t.clientY,tx0:tx,ty0:ty};
+    swipeX0=t.clientX;swipeY0=t.clientY;
+    pinch0=null;
+  }else if(e.touches.length>=2){
+    moved=true;pan0=null;swipeX0=null;
+    const t1=e.touches[0],t2=e.touches[1];
+    const cx=(t1.clientX+t2.clientX)/2,cy=(t1.clientY+t2.clientY)/2;
+    pinch0={d:Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY),cx,cy,zl0:zl,lx:(cx-tx)/zl,ly:(cy-ty)/zl};
+  }
+},{passive:true});
+
+vpEl.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(pan0&&e.touches.length===1&&!pinMode&&!relocatingPinId){
+    const t=e.touches[0],dx=t.clientX-pan0.x,dy=t.clientY-pan0.y;
+    if(Math.hypot(dx,dy)>5)moved=true;
+    tx=pan0.tx0+dx;ty=pan0.ty0+dy;applyTx();
+  }else if(pinch0&&e.touches.length>=2){
+    const t1=e.touches[0],t2=e.touches[1];
+    const d=Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY);
+    const cx=(t1.clientX+t2.clientX)/2,cy=(t1.clientY+t2.clientY)/2;
+    const nz=Math.min(10,Math.max(0.1,pinch0.zl0*d/pinch0.d));
+    tx=cx-pinch0.lx*nz;ty=cy-pinch0.ly*nz;zl=nz;applyTx();
+  }
+},{passive:false});
+
+vpEl.addEventListener('touchend',e=>{
+  if(e.touches.length<2)pinch0=null;
+  if(e.touches.length===0&&swipeX0!==null&&!moved&&zl<=1.05){
+    const dx=e.changedTouches[0].clientX-swipeX0;
+    const dy=e.changedTouches[0].clientY-swipeY0;
+    if(Math.abs(dx)>80&&Math.abs(dy)<50)changePage(dx<0?1:-1);
+    swipeX0=null;
+  }
+  if(e.touches.length===1){const t=e.touches[0];pan0={x:t.clientX,y:t.clientY,tx0:tx,ty0:ty};}
+  else if(e.touches.length===0)pan0=null;
+},{passive:true});
+
+vpEl.addEventListener('click',e=>{
+  if(moved)return;
+  if(relocatingPinId!==null){
+    const r=Q('ct').getBoundingClientRect();
+    const xPct=(e.clientX-r.left)/r.width,yPct=(e.clientY-r.top)/r.height;
+    if(xPct>=0&&xPct<=1&&yPct>=0&&yPct<=1){
+      actPdf.pins=actPdf.pins.map(p=>p.id!==relocatingPinId?p:{...p,xPct,yPct});
+      cancelRelocate();drawPins();persist();toast('✓ Pin movido');
+    }return;
+  }
+  if(!pinMode)return;
+  const r=Q('ct').getBoundingClientRect();
+  const xPct=(e.clientX-r.left)/r.width,yPct=(e.clientY-r.top)/r.height;
+  if(xPct>=0&&xPct<=1&&yPct>=0&&yPct<=1)openPinForm({xPct,yPct});
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// MOUSE PC
+// ══════════════════════════════════════════════════════════════════════════
+vpEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(e.ctrlKey||e.metaKey){zoomAtPt(e.clientX,e.clientY,zl*(e.deltaY<0?1.12:1/1.12));}
+  else{tx-=e.deltaX*1.2;ty-=e.deltaY*1.2;applyTx();}
+},{passive:false});
+
+let mousePan=null;
+vpEl.addEventListener('mousedown',e=>{if(e.button!==0||pinMode||relocatingPinId)return;mousePan={x:e.clientX,y:e.clientY,tx0:tx,ty0:ty};vpEl.classList.add('panning');e.preventDefault();});
+window.addEventListener('mousemove',e=>{if(!mousePan)return;tx=mousePan.tx0+(e.clientX-mousePan.x);ty=mousePan.ty0+(e.clientY-mousePan.y);applyTx();});
+window.addEventListener('mouseup',()=>{mousePan=null;vpEl.classList.remove('panning');});
+
+// ══════════════════════════════════════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement?.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(Q('pv').classList.contains('on')){
+    if(e.key==='ArrowLeft'){e.preventDefault();pvMove(-1);}
+    if(e.key==='ArrowRight'){e.preventDefault();pvMove(1);}
+    if(e.key==='Escape')closePV();
+    return;
+  }
+  if(!Q('s-viewer').classList.contains('on'))return;
+  if(e.key==='+'||e.key==='='){e.preventDefault();zoomBy(1.4);}
+  if(e.key==='-'){e.preventDefault();zoomBy(1/1.4);}
+  if(e.key==='0'){e.preventDefault();zoomFit();}
+  if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();changePage(1);}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();changePage(-1);}
+  if(e.key==='Escape'){cancelRelocate();closePV();closeList();setPinMode(false);}
+  if(e.key==='p'||e.key==='P')togglePinMode();
+});
+
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{
+  if(actPdf&&fitW>0){const vpW=Q('vp').clientWidth;if(Math.abs(vpW-fitW)>30){const k=`${actPdf.id}_${viewPage}`;const c=pageCache[k];if(c){fitW=vpW;fitH=Math.round(fitW*c.renderH/c.renderW);Q('page-wrap').style.width=fitW+'px';Q('page-wrap').style.height=fitH+'px';zoomFit();drawPins();}}}
+},300);});
+
+// ══════════════════════════════════════════════════════════════════════════
+// PIN MODE + MOVER PIN
+// ══════════════════════════════════════════════════════════════════════════
+function setPinMode(on){pinMode=on;Q('pin-fab').classList.toggle('on',on);Q('pill').classList.toggle('on',on);Q('pins-lyr').classList.toggle('pm',on);Q('vp').classList.toggle('pinmode',on);}
+function togglePinMode(){setPinMode(!pinMode);}
+function startRelocate(pinId){relocatingPinId=pinId;setPinMode(false);Q('relocate-pill').classList.add('on');Q('vp').classList.add('relocating');}
+function cancelRelocate(){relocatingPinId=null;Q('relocate-pill').classList.remove('on');Q('vp').classList.remove('relocating');}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DRAW PINS
+// ══════════════════════════════════════════════════════════════════════════
+function drawPins(){
+  const pl=Q('pins-lyr');pl.innerHTML='';if(!actPdf)return;
+  Q('ev-badge').textContent=actPdf.pins.length;
+  actPdf.pins.filter(p=>p.page===viewPage).forEach(p=>{
+    const c=cat(p.cat);
+    const anc=document.createElement('div');anc.className='pin-anc';anc.style.cssText=`left:${p.xPct*100}%;top:${p.yPct*100}%;`;anc.dataset.id=p.id;
+    const wrap=document.createElement('div');wrap.className='pin-wrap';
+    const img=document.createElement('img');img.src=makePinSVG(c.color);img.width=20;img.height=28;
+    const lbl=document.createElement('div');lbl.className='pin-lbl';lbl.textContent=p.id;lbl.style.borderColor=c.color+'55';
+    wrap.appendChild(img);wrap.appendChild(lbl);anc.appendChild(wrap);
+    wrap.addEventListener('click',ev=>{ev.stopPropagation();if(!moved)openPV(p.id);});
+    wrap.addEventListener('touchend',ev=>{ev.stopPropagation();ev.preventDefault();if(!moved)openPV(p.id);},{passive:false});
+    pl.appendChild(anc);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PIN VIEWER
+// ══════════════════════════════════════════════════════════════════════════
+function openPV(pinId){pvPins=actPdf.pins;pvIdx=Math.max(0,pvPins.findIndex(p=>p.id===pinId));resetImgZoom();showPVSlide(pvIdx);pushNav();Q('pv').classList.add('on');}
+function _closePV(){Q('pv').classList.remove('on');resetImgZoom();}
+function closePV(){_closePV();}
+function showPVSlide(idx){
+  pvIdx=idx;const p=pvPins[idx];const c=cat(p.cat);
+  Q('pv-icon').textContent=c.icon;Q('pv-label').textContent=`${c.label} · #${p.id}`;
+  Q('pv-cnt').textContent=pvPins.length>1?`${idx+1}/${pvPins.length}`:'';
+  const img=Q('pv-img'),noph=Q('pv-noph');
+  if(p.foto){
+    img.style.display='block';noph.style.display='none';img.style.opacity='0';img.style.transition='';
+    img.onerror=()=>{img.style.display='none';noph.style.display='flex';};
+    img.onload=()=>{img.style.transition='opacity .18s';img.style.opacity='1';};
+    img.src='';requestAnimationFrame(()=>{img.src=p.foto;});
+  }else{img.style.display='none';noph.style.display='flex';Q('pv-noph-ico').textContent=c.icon;Q('pv-noph-num').textContent=`#${p.id}`;Q('pv-noph').style.background=`linear-gradient(135deg,${c.color}22,${c.color}08)`;}
+  Q('pv-prev').classList.toggle('hidden',idx===0);Q('pv-next').classList.toggle('hidden',idx===pvPins.length-1);
+  const nEl=Q('pv-nota');nEl.textContent=p.nota||'Sin nota';nEl.className=p.nota?'':'vacia';
+  Q('pv-nota-card').style.setProperty('--cc',c.color);
+  let meta=`Pág. ${p.page} · ${p.fecha}`;
+  if(p.fotoFecha)meta+=` · 📷 ${p.fotoFecha}`;
+  if(p.resp)meta+=` · 👷 ${p.resp}`;
+  Q('pv-meta').textContent=meta;
+  const dots=Q('pv-dots');dots.innerHTML='';
+  if(pvPins.length>1&&pvPins.length<=12)pvPins.forEach((_,i)=>{const d=document.createElement('div');d.className='pvdot'+(i===idx?' on':'');dots.appendChild(d);});
+}
+function pvMove(dir){const ni=pvIdx+dir;if(ni>=0&&ni<pvPins.length){resetImgZoom();showPVSlide(ni);}}
+function pvRelocate(){const p=pvPins[pvIdx];if(!p)return;_closePV();startRelocate(p.id);}
+function pvReplacePhoto(){Q('fi-replace').click();}
+async function doReplacePhoto(input){
+  const f=input.files[0];if(!f)return;
+  input.value='';
+  let fileToProcess=f;
+  const isHeic=f.type==='image/heic'||f.type==='image/heif'||/\.(heic|heif)$/i.test(f.name);
+  if(isHeic&&typeof heic2any!=='undefined'){
+    setLoading('Convirtiendo imagen HEIC…',50);
+    try{const blob=await heic2any({blob:f,toType:'image/jpeg',quality:0.92});fileToProcess=Array.isArray(blob)?blob[0]:blob;}
+    catch(e){console.warn('heic2any',e);}
+    setLoading(null);
+  }
+  const r=new FileReader();
+  r.onload=async()=>{
+    const comp=await compressImage(r.result);
+    const p=pvPins[pvIdx];if(!p)return;
+    actPdf.pins=actPdf.pins.map(x=>x.id!==p.id?x:{...x,foto:comp});
+    persist();showPVSlide(pvIdx);toast('✓ Foto actualizada');
+    // Guardar la nueva foto en la carpeta del teléfono también
+    FOLDER.savePhoto(comp, actObra?.name||'OBRA', actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', p.id);
+  };
+  r.readAsDataURL(fileToProcess);
+}
+function pvEdit(){
+  const p=pvPins[pvIdx];if(!p)return;_closePV();
+  editPinId=p.id;pendXY=null;selCat=p.cat;formFoto=p.foto||null;fotoFecha=p.fotoFecha||null;
+  Q('m-pin-ttl').textContent=`✏️ Editar Evidencia #${p.id}`;
+  Q('pin-nota').value=p.nota||'';Q('pin-resp').value=p.resp||'';Q('pin-sender').value=p.sender||'';
+  Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
+  Q('pin-date').value='';Q('pin-time').value='';
+  if(p.foto){Q('fprev').src=p.foto;Q('fwrap').style.display='block';}else Q('fwrap').style.display='none';
+  buildCatGrid();pushNav();openOv('m-pin');
+}
+async function pvDelete(){
+  const p=pvPins[pvIdx];if(!p)return;
+  const ok=await showConfirm('🗑️ Eliminar evidencia',
+    `¿Eliminar evidencia #${p.id}${p.nota?' "'+p.nota.slice(0,40)+'"':''}?\n\nSolo se renumerarán los pines de la categoría "${cat(p.cat).label}".`,
+    {ok:'Eliminar',danger:true});
+  if(!ok)return;
+  const deletedId=p.id, deletedCat=p.cat;
+  actPdf.pins=actPdf.pins.filter(x=>x.id!==deletedId);
+  actPdf.pins=actPdf.pins.map(pin=>{
+    if(pin.cat===deletedCat && pin.id>deletedId) return{...pin,id:pin.id-1};
+    return pin;
+  });
+  actPdf.nextPinId=Math.max(0,...actPdf.pins.map(x=>x.id))+1;
+  _closePV();drawPins();renderList();renderFilesList();persist();
+  toast(`✓ Pin eliminado. Categoría renumerada.`);
+}
+async function locatePin(){
+  const p=pvPins[pvIdx];if(!p)return;_closePV();
+  if(p.page!==viewPage)await loadPage(p.page);
+  if(zl<2){zl=2;tx=0;ty=0;}
+  const vW=Q('vp').clientWidth,vH=Q('vp').clientHeight;
+  tx=vW/2-(p.xPct*fitW*zl);ty=vH/2-(p.yPct*fitH*zl);applyTx();drawPins();
+  setTimeout(()=>blinkPin(p.id),200);
+}
+function blinkPin(id){const el=Q('pins-lyr').querySelector(`[data-id="${id}"] .pin-wrap`);if(!el)return;el.classList.add('blinking');setTimeout(()=>el.classList.remove('blinking'),2500);}
+
+let pvSwX=null,pvSwY=null;
+Q('pv').addEventListener('touchstart',e=>{pvSwX=e.touches[0].clientX;pvSwY=e.touches[0].clientY;},{passive:true});
+Q('pv').addEventListener('touchend',e=>{
+  if(pvSwX===null)return;if(imgZl>1){pvSwX=pvSwY=null;return;}
+  const dx=e.changedTouches[0].clientX-pvSwX,dy=e.changedTouches[0].clientY-pvSwY;
+  if(dy>80&&Math.abs(dx)<60)closePV();
+  else if(Math.abs(dx)>50&&Math.abs(dy)<60)pvMove(dx<0?1:-1);
+  pvSwX=pvSwY=null;
+},{passive:true});
+
+function resetImgZoom(){imgZl=1;imgTx=0;imgTy=0;const i=Q('pv-img');i.style.transform='';i.style.transition='';}
+function applyImgTx(){Q('pv-img').style.transform=`translate(${imgTx}px,${imgTy}px) scale(${imgZl})`;}
+const pvStage=Q('pv-stage');
+
+pvStage.addEventListener('touchstart',e=>{
+  if(e.touches.length>=2){
+    e.stopPropagation();
+    const t1=e.touches[0],t2=e.touches[1];
+    imgPinch0={d:Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY),cx:(t1.clientX+t2.clientX)/2,cy:(t1.clientY+t2.clientY)/2,zl0:imgZl,tx0:imgTx,ty0:imgTy};
+    imgPan0=null;
+  }else if(e.touches.length===1&&imgZl>1){
+    e.stopPropagation();
+    const t=e.touches[0];imgPan0={x:t.clientX,y:t.clientY,tx0:imgTx,ty0:imgTy};
+  }
+},{passive:true});
+
+pvStage.addEventListener('touchmove',e=>{
+  if(imgPinch0&&e.touches.length>=2){
+    e.stopPropagation();
+    const t1=e.touches[0],t2=e.touches[1];
+    const d=Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY);
+    const cx=(t1.clientX+t2.clientX)/2,cy=(t1.clientY+t2.clientY)/2;
+    const r=Math.min(8,Math.max(1,imgPinch0.zl0*d/imgPinch0.d))/imgPinch0.zl0;
+    imgTx=cx-(imgPinch0.cx-imgPinch0.tx0)*r;imgTy=cy-(imgPinch0.cy-imgPinch0.ty0)*r;imgZl=imgPinch0.zl0*r;applyImgTx();
+  }else if(imgPan0&&e.touches.length===1&&imgZl>1){
+    e.stopPropagation();const t=e.touches[0];imgTx=imgPan0.tx0+(t.clientX-imgPan0.x);imgTy=imgPan0.ty0+(t.clientY-imgPan0.y);applyImgTx();
+  }
+},{passive:true});
+
+pvStage.addEventListener('touchend',e=>{if(e.touches.length<2)imgPinch0=null;if(e.touches.length===0){imgPan0=null;if(imgZl<=1)resetImgZoom();}},{passive:true});
+
+pvStage.addEventListener('wheel',e=>{
+  e.preventDefault();e.stopPropagation();
+  const f=e.deltaY<0?1.2:1/1.2;const nz=Math.min(8,Math.max(1,imgZl*f));if(nz===imgZl)return;
+  const rect=pvStage.getBoundingClientRect();
+  const ox=(e.clientX-rect.left-rect.width/2-imgTx)/imgZl;
+  const oy=(e.clientY-rect.top-rect.height/2-imgTy)/imgZl;
+  imgTx=(e.clientX-rect.left-rect.width/2)-ox*nz;imgTy=(e.clientY-rect.top-rect.height/2)-oy*nz;
+  imgZl=nz;if(imgZl<=1){imgZl=1;imgTx=0;imgTy=0;}applyImgTx();
+},{passive:false});
+
+let imgMousePan=null,lastTap=0;
+pvStage.addEventListener('mousedown',e=>{if(e.button!==0)return;imgMousePan={x:e.clientX,y:e.clientY,tx0:imgTx,ty0:imgTy};e.preventDefault();});
+window.addEventListener('mousemove',e=>{if(!imgMousePan)return;imgTx=imgMousePan.tx0+(e.clientX-imgMousePan.x);imgTy=imgMousePan.ty0+(e.clientY-imgMousePan.y);applyImgTx();});
+window.addEventListener('mouseup',e=>{
+  if(imgMousePan){if(Math.hypot(e.clientX-imgMousePan.x,e.clientY-imgMousePan.y)<5){const now=Date.now();if(now-lastTap<300){imgZl>1?resetImgZoom():(()=>{imgZl=2.5;imgTx=0;imgTy=0;applyImgTx();})();}lastTap=now;}imgMousePan=null;}
+});
+
+// LIGHTBOX
+function previewFoto(){if(!formFoto)return;Q('lb-img').src=formFoto;pushNav();Q('lightbox').classList.add('on');}
+function closeLightbox(){Q('lightbox').classList.remove('on');Q('lb-img').src='';}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PIN FORM
+// ══════════════════════════════════════════════════════════════════════════
+function openPinForm(xy){
+  pendXY=xy;editPinId=null;selCat=allCats()[0]?.id||'avance';formFoto=null;fotoFecha=null;
+  Q('m-pin-ttl').textContent=`📍 Nueva Evidencia #${actPdf?.nextPinId||1}`;
+  Q('pin-nota').value='';Q('pin-resp').value='';Q('pin-sender').value='';
+  Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
+  Q('pin-date').value='';Q('pin-time').value='';
+  Q('fwrap').style.display='none';buildCatGrid();pushNav();openOv('m-pin');
+}
+function _closePinModal(){pendXY=null;editPinId=null;closeOv('m-pin');}
+function closePinModal(){_closePinModal();}
+
+function buildCatGrid(){
+  const g=Q('catgrid');g.innerHTML='';
+  allCats().forEach(c=>{
+    const d=document.createElement('div');d.className='cb'+(c.id===selCat?' sel':'');d.style.setProperty('--c',c.color);
+    d.innerHTML=`<span class="ci">${c.icon}</span><span class="cl">${c.label}</span>`;
+    if(!DEFAULT_CATS.find(dc=>dc.id===c.id)){const x=document.createElement('div');x.className='cx';x.textContent='×';x.onclick=ev=>{ev.stopPropagation();deleteCat(c.id);};d.appendChild(x);}
+    d.onclick=()=>{selCat=c.id;buildCatGrid();};g.appendChild(d);
+  });
+  if(customCats.length<10){const add=document.createElement('div');add.className='cb';add.style.borderStyle='dashed';add.innerHTML=`<span class="ci" style="font-size:20px;color:#30363d">+</span><span class="cl" style="color:#30363d">Nueva</span>`;add.onclick=()=>openNewCatModal();g.appendChild(add);}
+}
+function openNewCatModal(){Q('cat-name-inp').value='';newCatEmoji=EMOJI_OPTS[0];newCatColor=PCOLS[0];buildEmojiGrid();buildCatColGrid();pushNav();openOv('m-cat');setTimeout(()=>Q('cat-name-inp').focus(),120);}
+function buildEmojiGrid(){const g=Q('emoji-grid');g.innerHTML='';EMOJI_OPTS.forEach(e=>{const b=document.createElement('div');b.className='emoji-btn'+(e===newCatEmoji?' sel':'');b.textContent=e;b.onclick=()=>{newCatEmoji=e;buildEmojiGrid();};g.appendChild(b);});}
+function buildCatColGrid(){const g=Q('cat-col-grid');g.innerHTML='';PCOLS.forEach(c=>{const d=document.createElement('div');d.className='cpk'+(c===newCatColor?' sel':'');d.style.background=c;d.onclick=()=>{newCatColor=c;buildCatColGrid();};g.appendChild(d);});}
+function saveCustomCat(){const name=Q('cat-name-inp').value.trim();if(!name)return Q('cat-name-inp').focus();customCats.push({id:'custom_'+Date.now(),label:name,color:newCatColor,icon:newCatEmoji});selCat=customCats.at(-1).id;persistCats();closeOv('m-cat');buildCatGrid();}
+async function deleteCat(id){const ok=await showConfirm('🗑️ Eliminar categoría','¿Eliminar esta categoría personalizada?',{ok:'Eliminar',danger:true});if(!ok)return;customCats=customCats.filter(c=>c.id!==id);if(selCat===id)selCat=DEFAULT_CATS[0].id;persistCats();buildCatGrid();}
+
+async function pickFoto(input, source){
+  const f=input.files[0];if(!f)return;
+  input.value='';
+  const isManualDate = (source==='gal'||source==='wa');
+  Q('pin-date-block').style.display = isManualDate ? 'block' : 'none';
+  Q('sender-block').style.display   = isManualDate ? 'block' : 'none';
+  if(source==='cam'){
+    fotoFecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+  }else{fotoFecha=null;}
+  let fileToProcess=f;
+  const isHeic=f.type==='image/heic'||f.type==='image/heif'||/\.(heic|heif)$/i.test(f.name);
+  if(isHeic&&typeof heic2any!=='undefined'){
+    setLoading('Convirtiendo imagen HEIC…',50);
+    try{
+      const blob=await heic2any({blob:f,toType:'image/jpeg',quality:0.92});
+      fileToProcess=Array.isArray(blob)?blob[0]:blob;
+    }catch(e){console.warn('heic2any error',e);toast('⚠️ No se pudo convertir HEIC');}
+    setLoading(null);
+  }
+  const r=new FileReader();
+  r.onerror=()=>{toast('⚠️ No se pudo leer la imagen');};
+  r.onload=async()=>{
+    const comp=await compressImage(r.result);
+    if(!comp||comp.length<100){toast('⚠️ Imagen inválida');return;}
+    formFoto=comp;
+    Q('fprev').src=comp;
+    Q('fwrap').style.display='block';
+    toast(`📷 ${Math.round(comp.length*.75/1024)}KB${fotoFecha?' · '+fotoFecha:''}`,3000);
+  };
+  r.readAsDataURL(fileToProcess);
+}
+
+function savePin(){
+  const nota=Q('pin-nota').value;const resp=Q('pin-resp').value.trim();
+  const sender=Q('pin-sender').value.trim();
+  const dateVal=Q('pin-date').value;const timeVal=Q('pin-time').value;
+  let fecha;
+  const dateBlockVisible=Q('pin-date-block').style.display!=='none';
+  if(dateBlockVisible&&dateVal){
+    const d=new Date(dateVal+'T00:00:00');
+    fecha=d.toLocaleDateString('es-MX',{dateStyle:'short'})+(timeVal?' '+timeVal:'');
+  }else{fecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}
+  const wasEditing=editPinId;
+  let targetPinId=null;
+  if(editPinId!==null){
+    actPdf.pins=actPdf.pins.map(p=>p.id!==editPinId?p:{...p,cat:selCat,nota,resp,sender,foto:formFoto!==null?formFoto:p.foto,fotoFecha:fotoFecha!==null?fotoFecha:p.fotoFecha,fecha});
+    targetPinId=editPinId;
+  }else if(pendXY){
+    if(!actPdf.nextPinId)actPdf.nextPinId=Math.max(0,...actPdf.pins.map(p=>p.id||0))+1;
+    targetPinId=actPdf.nextPinId++;
+    actPdf.pins.push({id:targetPinId,page:viewPage,xPct:pendXY.xPct,yPct:pendXY.yPct,cat:selCat,nota,resp,sender,foto:formFoto,fotoFecha,fecha});
+  }
+  _closePinModal();drawPins();renderList();renderFilesList();persist();
+  // ── Exportar foto a la carpeta del teléfono (solo pin NUEVO con foto) ──
+  if(wasEditing===null && formFoto && targetPinId!=null){
+    FOLDER.savePhoto(formFoto, actObra?.name||'OBRA',
+      actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', targetPinId);
+  }
+  if(wasEditing!==null)openPV(wasEditing);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LISTA
+// ══════════════════════════════════════════════════════════════════════════
+function openList(){pushNav();Q('lp').classList.add('on');renderList();}
+function closeList(){Q('lp').classList.remove('on');}
+function renderList(){
+  if(!actPdf)return;const sc=Q('lscroll');sc.innerHTML='';
+  Q('lp-ttl').textContent=`Evidencias (${actPdf.pins.length})`;
+  if(!actPdf.pins.length){sc.innerHTML='<div class="lempty">Activa 📍 y toca el plano.</div>';return;}
+  allCats().forEach(c=>{
+    const pins=actPdf.pins.filter(p=>p.cat===c.id);if(!pins.length)return;
+    const hdr=document.createElement('div');hdr.className='lcat-hdr';hdr.innerHTML=`<span>${c.icon}</span><span style="color:${c.color}">${c.label}</span><span style="color:#30363d;font-size:9px;margin-left:2px;">(${pins.length})</span>`;sc.appendChild(hdr);
+    pins.forEach(p=>{
+      const d=document.createElement('div');d.className='litem';
+      d.innerHTML=`<div class="lbdg" style="background:${c.color}">${p.id}</div>
+        <div style="flex:1;min-width:0"><div class="llbl">${p.nota||'Sin nota'}</div>
+        <div class="lmeta">Pág. ${p.page} · ${p.fecha}${p.fotoFecha?' · 📷':''}${p.resp?' · 👷 '+p.resp:''}</div></div>
+        ${p.foto?`<img class="lthumb" src="${p.foto}" onerror="this.remove()" alt=""/>`:''}`;
+      d.onclick=()=>{closeList();if(p.page!==viewPage)loadPage(p.page).then(()=>openPV(p.id));else openPV(p.id);};
+      sc.appendChild(d);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// REPORTE
+// ══════════════════════════════════════════════════════════════════════════
+function getWeekLabel(){
+  const now=new Date(),day=now.getDay();const mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const f=d=>d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'});
+  const wn=Math.ceil((((now-new Date(now.getFullYear(),0,1))/86400000)+new Date(now.getFullYear(),0,1).getDay()+1)/7);
+  return `Sem ${wn}: ${f(mon)} – ${f(sun)}`;
+}
+function loadRepPrefs(){try{const r=localStorage.getItem(REP_PREFS);return r?JSON.parse(r):{empresa:'ASIPSA',elaboro:'Arq. Iván Romero',ubicacion:''};}catch{return{empresa:'ASIPSA',elaboro:'Arq. Iván Romero',ubicacion:''};}}
+function saveRepPrefs(){try{localStorage.setItem(REP_PREFS,JSON.stringify({empresa:Q('rep-empresa').value,elaboro:Q('rep-elaboro').value,ubicacion:Q('rep-ubicacion').value}));}catch(_){}}
+
+function openReportModal(){
+  if(!actPdf){toast('Abre un PDF primero');return;}
+  const prefs=loadRepPrefs();
+  Q('rep-title').value='Reporte Fotográfico';
+  Q('rep-obra').value=actObra?.name||'';
+  Q('rep-semana').value=getWeekLabel();
+  Q('rep-ubicacion').value=prefs.ubicacion||'';
+  Q('rep-empresa').value=prefs.empresa||'ASIPSA';
+  Q('rep-elaboro').value=prefs.elaboro||'Arq. Iván Romero';
+  const gc=Q('rep-cats');gc.innerHTML='';repCatFilter=[];
+  allCats().forEach(c=>{
+    const lbl=document.createElement('label');lbl.style.cssText='display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid #30363d;background:#21262d;';
+    const cb=document.createElement('input');cb.type='checkbox';cb.value=c.id;cb.checked=true;cb.style.accentColor=c.color;
+    cb.onchange=()=>{if(cb.checked)repCatFilter=repCatFilter.filter(x=>x!==c.id);else repCatFilter.push(c.id);};
+    lbl.appendChild(cb);lbl.innerHTML+=`${c.icon} ${c.label}`;gc.appendChild(lbl);
+  });
+  pushNav();openOv('m-report');
+}
+
+async function generateReport(){
+  if(!actPdf||!actObra)return;saveRepPrefs();closeOv('m-report');
+  toast('Preparando reporte…',8000);
+
+  const title   = Q('rep-title').value    || 'Reporte Fotográfico';
+  const obra    = Q('rep-obra').value;
+  const semana  = Q('rep-semana').value;
+  const ubic    = Q('rep-ubicacion').value;
+  const empresa = Q('rep-empresa').value  || 'ASIPSA';
+  const elaboro = Q('rep-elaboro').value  || 'Arq. Iván Romero';
+  const pins    = actPdf.pins.filter(p=>!repCatFilter.includes(p.cat));
+  const pdfName = actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'');
+  const genDate = new Date().toLocaleDateString('es-MX',{dateStyle:'long'});
+  const total   = pins.length, conFoto=pins.filter(p=>p.foto).length;
+
+  const neededPages=new Set(pins.map(p=>p.page));let pi=0;
+  for(const pg of neededPages){pi++;const k=`${actPdf.id}_${pg}`;
+    if(!pageCache[k]){setLoading(`Preparando plano pág. ${pg}/${actPdf.pageCount||'?'}…`,Math.round(pi/neededPages.size*60));try{await ensurePage(actPdf.id,pg,false,true);}catch(_){}}}
+  setLoading(null);
+
+  function imgDim(src){return new Promise(res=>{if(!src)return res({w:4,h:3});const i=new Image();i.onload=()=>res({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>res({w:4,h:3});i.src=src;});}
+  const dims={};
+  await Promise.all(pins.filter(p=>p.foto).map(async p=>{dims[p.id]=await imgDim(p.foto);}));
+  const isPort=id=>dims[id]&&dims[id].h>dims[id].w;
+
+  function cg(pins,t){const u=new Array(pins.length).fill(false);const r=[];for(let i=0;i<pins.length;i++){if(u[i])continue;const g=[pins[i]];u[i]=true;for(let j=i+1;j<pins.length;j++){if(!u[j]&&Math.hypot(pins[i].xPct-pins[j].xPct,pins[i].yPct-pins[j].yPct)<t){g.push(pins[j]);u[j]=true;}}r.push(g);}return r;}
+  function sc(pins){if(pins.length<=8)return cg(pins,.03);let lo=.02,hi=.35;for(let k=0;k<12;k++){const m=(lo+hi)/2;if(cg(pins,m).length>9)lo=m;else hi=m;}return cg(pins,hi);}
+
+  const PLAN_COL_W=390;
+  function bigPlan(pdfId,pageNum,catPins,planH){
+    const k=`${pdfId}_${pageNum}`;const cached=pageCache[k];
+    if(!cached)return`<div style="height:${planH}px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#9ca3af;font-size:10px;border-radius:5px 5px 0 0;text-align:center;"><span style="font-size:22px">📄</span>Plano no disponible</div>`;
+    const clusters=sc(catPins);
+    const dots=clusters.map(group=>{
+      const c=cat(group[0].cat);
+      const cx=group.reduce((s,p)=>s+p.xPct,0)/group.length;
+      const cy=group.reduce((s,p)=>s+p.yPct,0)/group.length;
+      const lbl=group.length===1?group[0].catNum:(group.length<=4?group.map(p=>p.catNum).join(','):group.slice(0,3).map(p=>p.catNum).join(',')+'+');
+      const pill=group.length>1;
+      const w=pill?Math.max(24,10+String(lbl).length*6):20;
+      const h=pill?22:20;
+      const br=pill?`${h/2}px`:'50%';
+      const pad=pill?'0 6px':'0';
+      return`<div style="position:absolute;left:${cx*100}%;top:${cy*100}%;transform:translate(-50%,-50%);min-width:${w}px;height:${h}px;border-radius:${br};background:${c.color}59;border:1.5px solid ${c.color};display:flex;align-items:center;justify-content:center;padding:${pad};font-size:9px;font-weight:800;color:#fff;white-space:nowrap;letter-spacing:.3px;pointer-events:none;">${lbl}</div>`;
+    }).join('');
+    return`<div style="position:relative;width:100%;height:${planH}px;overflow:hidden;border-radius:5px 5px 0 0;background:#f8fafc;"><img src="${cached.blobURL}" style="width:100%;height:100%;object-fit:fill;display:block;"/>${dots}</div>`;
+  }
+
+  const allBatches=[];
+  for(const c of allCats()){
+    const catPins=pins.filter(p=>p.cat===c.id);if(!catPins.length)continue;
+    const numbered=catPins.map((p,i)=>({...p,catNum:i+1}));
+    const wf=numbered.filter(p=>p.foto);
+    let i=0;
+    while(i<wf.length){
+      const p0=wf[i],p1=wf[i+1],p2=wf[i+2];
+      const trio=p0&&p1&&p2&&isPort(p0.id)&&isPort(p1.id)&&isPort(p2.id);
+      if(trio){allBatches.push({c,batch:[p0,p1,p2]});i+=3;}
+      else{allBatches.push({c,batch:p1?[p0,p1]:[p0]});i+=2;}
+    }
+  }
+
+  let sectionsHtml='';let prevCatId=null;let rowCount=0;
+  for(const {c,batch} of allBatches){
+    if(c.id!==prevCatId){
+      prevCatId=c.id;const ct=pins.filter(p=>p.cat===c.id).length;
+      sectionsHtml+=`<div style="display:flex;align-items:center;gap:7px;margin:${rowCount>0?'14px':'0'} 0 7px;">
+        <span style="font-size:11px;">${c.icon}</span>
+        <span style="font-size:10px;font-weight:800;color:${c.color};">${c.label}</span>
+        <span style="font-size:9px;color:#9ca3af;">${ct} evidencia${ct!==1?'s':''}</span>
+        <div style="flex:1;height:1px;background:${c.color}44;"></div>
+      </div>`;
+    }
+    rowCount++;
+    const pageCounts={};batch.forEach(p=>{pageCounts[p.page]=(pageCounts[p.page]||0)+1;});
+    const domPage=+Object.entries(pageCounts).sort((a,b)=>b[1]-a[1])[0][0];
+    const planPins=batch.filter(p=>p.page===domPage);
+    const cc=pageCache[`${actPdf.id}_${domPage}`];
+    const ar=cc?cc.renderW/cc.renderH:1.5;
+    const planH=Math.round(Math.max(100,Math.min(450,PLAN_COL_W/ar)));
+    const photoH=planH;
+
+    const photoCols=batch.map(p=>{
+      if(!p.foto)return'';
+      const meta=[p.fecha,p.fotoFecha?'📷 '+p.fotoFecha:null,p.resp?'👷 '+p.resp:null,p.sender?'💬 '+p.sender:null].filter(Boolean).join(' · ');
+      return`<div style="flex:1;min-width:0;">
+        <img src="${p.foto}" style="width:100%;height:${photoH}px;object-fit:cover;border-radius:5px;display:block;background:#f3f4f6;border:1px solid #e5e7eb;"/>
+        <div style="padding:4px 2px 0;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+            <span style="background:${c.color};color:#fff;font-weight:800;font-size:9px;padding:1px 7px;border-radius:20px;white-space:nowrap;">${c.icon} ${p.catNum}</span>
+            <span style="font-size:8px;color:#6b7280;line-height:1.3;">${meta}</span>
+          </div>
+          <p style="font-size:10px;line-height:1.4;color:#374151;margin:0;">${(p.nota||'').slice(0,120)||'<em style="color:#9ca3af">Sin nota</em>'}</p>
+        </div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    sectionsHtml+=`<div style="break-inside:avoid;page-break-inside:avoid;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="flex:0 0 38%;max-width:38%;align-self:flex-start;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;background:#f8fafc;">
+          ${bigPlan(actPdf.id,domPage,planPins,planH)}
+          <div style="padding:3px 8px;font-size:8px;color:#9ca3af;background:#f1f5f9;border-top:1px solid #e5e7eb;text-align:center;">📄 Pág. ${domPage}/${actPdf.pageCount||'?'}</div>
+        </div>
+        <div style="flex:1;min-width:0;display:flex;gap:8px;">${photoCols}</div>
+      </div>
+    </div>`;
+  }
+
+  const hdr=`<div class="rpt-hdr">
+    <div class="rpt-hl">
+      <div style="font-size:18px;font-weight:800;color:#0d1117;line-height:1.1;margin-bottom:3px;">${title}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:9px;color:#6b7280;">
+        ${obra  ?`<span><b style="color:#374151;">Obra:</b> ${obra}</span>`:''}
+        ${semana?`<span><b style="color:#374151;">Semana:</b> ${semana}</span>`:''}
+        ${ubic  ?`<span><b style="color:#374151;">Ubic.:</b> ${ubic}</span>`:''}
+        <span><b style="color:#374151;">Plano:</b> ${pdfName}</span>
+        <span><b style="color:#374151;">${total}</b> ev. · <b style="color:#374151;">${conFoto}</b> con foto</span>
+      </div>
+    </div>
+    <div class="rpt-hr">
+      <div style="font-size:12px;font-weight:800;color:#0d1117;">${empresa}</div>
+      <div style="font-size:9px;color:#6b7280;">${elaboro}</div>
+      <div style="font-size:8px;color:#9ca3af;margin-top:1px;">${genDate}</div>
+    </div>
+  </div>`;
+
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#fff;color:#1f2937;}
+.rpt-hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;padding:7px 0 9px;border-top:3px solid #22d3a8;border-bottom:1px solid #e2e8f0;}
+.rpt-hl{flex:1;min-width:0;}
+.rpt-hr{text-align:right;flex-shrink:0;border-left:1px solid #e5e7eb;padding-left:14px;}
+@page{size:A4 landscape;margin:10mm;}
+@media print{
+  .np,.tip{display:none!important;}
+  body{margin:0;}
+  .rpt-hdr{position:fixed;top:0;left:0;right:0;padding:6px 10mm;z-index:1000;box-shadow:0 1px 0 #e2e8f0;}
+  .rpt-body{padding-top:50px;}
+}
+@media screen{
+  body{background:#e9ecef;padding:20px;}
+  .wrapper{max-width:1080px;margin:0 auto;}
+  .rpt-body{margin-top:12px;}
+}
+.np{position:fixed;top:14px;right:14px;background:#22d3a8;color:#0d1117;border:none;padding:10px 20px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;z-index:99;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.tip{background:#fef9c3;border:1px solid #fde047;border-radius:5px;padding:6px 12px;font-size:10px;color:#92400e;margin-bottom:14px;}
+footer{font-size:8px;color:#9ca3af;display:flex;justify-content:space-between;padding-top:8px;margin-top:16px;border-top:1px solid #e5e7eb;}
+</style></head><body>
+<button class="np" onclick="window.print()">🖨️ Imprimir / PDF</button>
+<div class="tip">💡 Para quitar encabezados del navegador: Impresión → Más configuraciones → desactivar "Encabezados y pies de página"</div>
+<div class="wrapper">
+${hdr}
+<div class="rpt-body">
+${sectionsHtml}
+<footer><span>${empresa} · ${elaboro}</span><span>${title} · ${genDate}</span></footer>
+</div>
+</div>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();}
+  else toast('Permite popups para generar el reporte');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// MODALES UTILS
+// ══════════════════════════════════════════════════════════════════════════
+const openOv=id=>Q(id).classList.add('on');
+const closeOv=id=>Q(id).classList.remove('on');
+Q('m-obra').onclick=e=>{if(e.target===Q('m-obra'))closeOv('m-obra');};
+Q('m-pin').onclick=e=>{if(e.target===Q('m-pin'))_closePinModal();};
+Q('m-cat').onclick=e=>{if(e.target===Q('m-cat'))closeOv('m-cat');};
+Q('m-report').onclick=e=>{if(e.target===Q('m-report'))closeOv('m-report');};
+
+// ══════════════════════════════════════════════════════════════════════════
+// SERVICE WORKER — permite instalar como PWA y abrir sin internet
+// ══════════════════════════════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  const swCode=`
+    const CACHE='obrapines-v1';
+    const ASSETS=[
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js'
+    ];
+    self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})));});
+    self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
+    self.addEventListener('fetch',e=>{
+      const u=e.request.url;
+      // Cachear la propia página y las librerías para uso offline
+      if(e.request.mode==='navigate'){
+        e.respondWith(fetch(e.request).then(r=>{const cp=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));return r;}).catch(()=>caches.match(e.request)));
+        return;
+      }
+      if(ASSETS.some(a=>u.startsWith(a.split('?')[0]))){
+        e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(rr=>{const cp=rr.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));return rr;})));
+      }
+    });
+  `;
+  try{
+    const blob=new Blob([swCode],{type:'text/javascript'});
+    const swURL=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swURL).catch(e=>console.warn('SW',e));
+  }catch(e){console.warn('SW reg',e);}
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SINCRONIZACIÓN — Exportar / Importar respaldo JSON (R0m3r014)
+// Archivo único autocontenido: obras + PDFs(base64) + pines + notas + fotos
+// Importar SIEMPRE avisa antes de pisar datos. Auto-respaldo de emergencia.
+// ══════════════════════════════════════════════════════════════════════════
+const SYNC={
+  VERSION:1,
+
+  // ArrayBuffer → base64 (para meter el PDF dentro del JSON)
+  abToB64(ab){
+    if(!ab)return null;
+    const bytes=new Uint8Array(ab);let bin='';
+    const chunk=0x8000;
+    for(let i=0;i<bytes.length;i+=chunk){bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));}
+    return btoa(bin);
+  },
+  // base64 → ArrayBuffer
+  b64ToAb(b64){
+    if(!b64)return null;
+    const bin=atob(b64);const len=bin.length;const bytes=new Uint8Array(len);
+    for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+    return bytes.buffer;
+  },
+
+  // ── EXPORTAR: construye el paquete completo y lo descarga ──
+  async export(){
+    try{
+      setLoading('Preparando respaldo…',5);
+      // Recolectar PDFs binarios desde IndexedDB
+      const pdfBlobs={};
+      let totalPdfs=0;
+      for(const o of obras)for(const f of o.pdfs)totalPdfs++;
+      let done=0;
+      for(const o of obras)for(const f of o.pdfs){
+        done++;
+        setLoading(`Empaquetando planos ${done}/${totalPdfs}…`,Math.round(done/Math.max(1,totalPdfs)*70));
+        const ab=await DB.get(f.id);
+        if(ab)pdfBlobs[f.id]=this.abToB64(ab);
+      }
+      setLoading('Generando archivo…',85);
+      const pkg={
+        app:'ObraPines',
+        version:this.VERSION,
+        exportedAt:new Date().toISOString(),
+        device:navigator.userAgent.slice(0,80),
+        counters:{nObraId,nPdfId},
+        obras:obras,
+        customCats:customCats,
+        repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
+        pdfBlobs:pdfBlobs
+      };
+      const json=JSON.stringify(pkg);
+      const blob=new Blob([json],{type:'application/json'});
+      const stamp=new Date().toISOString().slice(0,10);
+      const fname=`ObraPines_RESPALDO_${stamp}.json`;
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=fname;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
+      setLoading(null);
+      const mb=(json.length/1048576).toFixed(1);
+      const nPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
+      const nFotos=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0),0);
+      await showAlert('✓ Respaldo generado',
+        `Archivo: ${fname}\nTamaño: ${mb} MB\n\nContiene:\n· ${obras.length} obra(s)\n· ${totalPdfs} plano(s)\n· ${nPins} evidencia(s)\n· ${nFotos} foto(s)\n\nGuárdalo en Drive o mándatelo por WhatsApp. Para editar en otro equipo, ábrelo con "Importar".`);
+    }catch(e){setLoading(null);console.warn('export',e);await showAlert('Error',`No se pudo generar el respaldo.\n${e.message}`);}
+  },
+
+  // ── IMPORTAR: lee el archivo, muestra resumen, pregunta qué hacer ──
+  async import(input){
+    const file=input.files[0];input.value='';
+    if(!file)return;
+    setLoading('Leyendo respaldo…',10);
+    let pkg;
+    try{
+      const text=await file.text();
+      pkg=JSON.parse(text);
+    }catch(e){setLoading(null);await showAlert('Archivo inválido','No se pudo leer el archivo. ¿Es un respaldo .json de ObraPines?');return;}
+    setLoading(null);
+
+    // Validación básica
+    if(!pkg||pkg.app!=='ObraPines'||!Array.isArray(pkg.obras)){
+      await showAlert('Archivo inválido','Este archivo no parece un respaldo de ObraPines.');
+      return;
+    }
+
+    // Resumen del respaldo vs estado actual
+    const inObras=pkg.obras.length;
+    const inPins=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0),0);
+    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.foto).length||0),0),0);
+    const curObras=obras.length;
+    const curPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
+    const fecha=pkg.exportedAt?new Date(pkg.exportedAt).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'}):'desconocida';
+
+    const choice=await this.askMode(
+      `📥 RESPALDO A IMPORTAR\nFecha: ${fecha}\n· ${inObras} obra(s) · ${inPins} evidencia(s) · ${inFotos} foto(s)\n\n📱 LO QUE TIENES AHORA\n· ${curObras} obra(s) · ${curPins} evidencia(s)\n\n¿Qué quieres hacer?`);
+
+    if(choice==='cancel')return;
+
+    // Auto-respaldo de emergencia ANTES de tocar nada
+    try{
+      const safety={app:'ObraPines',version:this.VERSION,exportedAt:new Date().toISOString(),obras:obras,customCats:customCats,counters:{nObraId,nPdfId}};
+      localStorage.setItem('obrapines_safety',JSON.stringify({obras:safety.obras,customCats:safety.customCats,counters:safety.counters,at:safety.exportedAt}));
+    }catch(_){/* si no cabe, seguimos igual */}
+
+    if(choice==='replace'){
+      const ok=await showConfirm('⚠️ Reemplazar TODO',
+        `Esto BORRARÁ tus ${curObras} obra(s) actuales y dejará solo las ${inObras} del respaldo.\n\n¿Seguro? (Se guardó una copia de emergencia por si acaso.)`,
+        {ok:'Sí, reemplazar',danger:true});
+      if(!ok)return;
+      await this.doReplace(pkg);
+    }else{
+      await this.doMerge(pkg);
+    }
+  },
+
+  // Modal de 3 opciones: combinar / reemplazar / cancelar
+  askMode(msg){
+    return new Promise(res=>{
+      const finish=(val)=>{Q('mc-btns').style.flexDirection='row';_mresolve=null;res(val);};
+      _mresolve=()=>finish('cancel'); // botón atrás de Android → cancelar
+      Q('mc-ttl').innerHTML='🔄 Importar respaldo';
+      Q('mc-body').innerHTML=`<p style="color:#8b949e;font-size:13px;line-height:1.7;white-space:pre-line;margin-bottom:4px;">${msg}</p>`;
+      const row=Q('mc-btns');row.innerHTML='';row.style.flexDirection='column';
+      const mk=(txt,cls,val,sub)=>{
+        const b=document.createElement('button');b.className=cls;b.style.width='100%';b.style.flex='unset';b.style.marginBottom='8px';b.style.textAlign='left';b.style.lineHeight='1.4';
+        b.innerHTML=txt+(sub?`<div style="font-size:10px;font-weight:400;opacity:.8;margin-top:2px;">${sub}</div>`:'');
+        b.onclick=()=>{closeOv('m-confirm');finish(val);};
+        return b;
+      };
+      row.appendChild(mk('🔗 Combinar (recomendado)','bpri','merge','Suma lo nuevo sin borrar lo tuyo'));
+      row.appendChild(mk('🔁 Reemplazar todo','bdng','replace','Borra lo actual y deja solo el respaldo'));
+      row.appendChild(mk('✕ Cancelar','bsec','cancel',''));
+      pushNav();openOv('m-confirm');
+    });
+  },
+
+  // ── REEMPLAZAR: limpia todo y carga el respaldo ──
+  async doReplace(pkg){
+    setLoading('Importando (reemplazar)…',10);
+    try{
+      // Limpiar PDFs viejos de IndexedDB
+      for(const o of obras)for(const f of o.pdfs){await DB.del(f.id);}
+      Object.keys(docCache).forEach(k=>delete docCache[k]);
+      Object.keys(pageCache).forEach(k=>{URL.revokeObjectURL(pageCache[k]?.blobURL);delete pageCache[k];});
+      // Cargar nuevo estado
+      obras=pkg.obras;
+      customCats=pkg.customCats||[];
+      if(pkg.counters){nObraId=pkg.counters.nObraId||1;nPdfId=pkg.counters.nPdfId||1;}
+      await this.restorePdfBlobs(pkg);
+      if(pkg.repPrefs){try{localStorage.setItem(REP_PREFS,JSON.stringify(pkg.repPrefs));}catch(_){}}
+      persist();persistCats();
+      setLoading(null);
+      actObra=null;actPdf=null;goObras();
+      toast('✓ Respaldo importado (reemplazo completo)',3500);
+    }catch(e){setLoading(null);console.warn('replace',e);await showAlert('Error',e.message);}
+  },
+
+  // ── COMBINAR: junta obras por nombre, pines por contenido ──
+  async doMerge(pkg){
+    setLoading('Combinando datos…',10);
+    try{
+      let addedObras=0,addedPins=0,updatedPins=0;
+      // Mapa de obras actuales por nombre (normalizado)
+      const norm=s=>(s||'').trim().toUpperCase();
+      const byName={};obras.forEach(o=>{byName[norm(o.name)]=o;});
+
+      // Combinar categorías personalizadas (por id)
+      const catIds=new Set(customCats.map(c=>c.id));
+      (pkg.customCats||[]).forEach(c=>{if(!catIds.has(c.id)){customCats.push(c);catIds.add(c.id);}});
+
+      for(const impObra of pkg.obras){
+        let target=byName[norm(impObra.name)];
+        if(!target){
+          // Obra nueva completa → reasignar IDs para no colisionar
+          const newObra={...impObra,id:nObraId++,pdfs:[]};
+          for(const f of impObra.pdfs){
+            const newId=nPdfId++;
+            const newPdf={...f,id:newId};
+            // mover el blob del respaldo a la nueva id
+            if(pkg.pdfBlobs&&pkg.pdfBlobs[f.id]){
+              const ab=this.b64ToAb(pkg.pdfBlobs[f.id]);
+              if(ab)await DB.put(newId,ab);
+            }
+            newObra.pdfs.push(newPdf);
+          }
+          obras.push(newObra);byName[norm(newObra.name)]=newObra;
+          addedObras++;addedPins+=impObra.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0);
+        }else{
+          // Obra existe → combinar PDFs por displayName/name
+          const pdfByName={};target.pdfs.forEach(f=>{pdfByName[norm(f.displayName||f.name)]=f;});
+          for(const impPdf of impObra.pdfs){
+            let tPdf=pdfByName[norm(impPdf.displayName||impPdf.name)];
+            if(!tPdf){
+              const newId=nPdfId++;
+              const newPdf={...impPdf,id:newId};
+              if(pkg.pdfBlobs&&pkg.pdfBlobs[impPdf.id]){
+                const ab=this.b64ToAb(pkg.pdfBlobs[impPdf.id]);
+                if(ab)await DB.put(newId,ab);
+              }
+              target.pdfs.push(newPdf);pdfByName[norm(newPdf.displayName||newPdf.name)]=newPdf;
+              addedPins+=impPdf.pins?.length||0;
+            }else{
+              // PDF existe → combinar pines. Clave: misma posición + categoría
+              const sig=p=>`${p.cat}|${(p.xPct||0).toFixed(4)}|${(p.yPct||0).toFixed(4)}|${p.page}`;
+              const existing={};tPdf.pins.forEach(p=>{existing[sig(p)]=p;});
+              for(const impPin of (impPdf.pins||[])){
+                const s=sig(impPin);
+                const ex=existing[s];
+                if(!ex){
+                  // pin nuevo → id consecutivo en este pdf
+                  const nid=Math.max(0,...tPdf.pins.map(x=>x.id||0))+1;
+                  tPdf.pins.push({...impPin,id:nid});
+                  existing[s]={...impPin,id:nid};
+                  addedPins++;
+                }else{
+                  // mismo pin → conservar el más completo (nota más larga / foto más reciente)
+                  const impLen=(impPin.nota||'').length, exLen=(ex.nota||'').length;
+                  let changed=false;
+                  if(impLen>exLen){ex.nota=impPin.nota;changed=true;}
+                  if(impPin.foto&&!ex.foto){ex.foto=impPin.foto;ex.fotoFecha=impPin.fotoFecha;changed=true;}
+                  if(impPin.resp&&!ex.resp){ex.resp=impPin.resp;changed=true;}
+                  if(impPin.sender&&!ex.sender){ex.sender=impPin.sender;changed=true;}
+                  if(changed)updatedPins++;
+                }
+              }
+              tPdf.nextPinId=Math.max(0,...tPdf.pins.map(x=>x.id||0))+1;
+            }
+          }
+        }
+      }
+      persist();persistCats();
+      setLoading(null);
+      if(actObra)goFiles();else goObras();
+      renderObrasList();
+      await showAlert('✓ Combinado',
+        `Se agregaron:\n· ${addedObras} obra(s) nueva(s)\n· ${addedPins} evidencia(s) nueva(s)\n· ${updatedPins} evidencia(s) actualizada(s)\n\nNo se borró nada de lo que ya tenías.`);
+    }catch(e){setLoading(null);console.warn('merge',e);await showAlert('Error',`Falló la combinación.\n${e.message}\n\nTu copia de emergencia está a salvo.`);}
+  },
+
+  // Restaura los PDF binarios desde el paquete a IndexedDB + docCache
+  async restorePdfBlobs(pkg){
+    if(!pkg.pdfBlobs)return;
+    for(const o of obras)for(const f of o.pdfs){
+      const b64=pkg.pdfBlobs[f.id];
+      if(b64){
+        const ab=this.b64ToAb(b64);
+        if(ab){
+          await DB.put(f.id,ab);
+          try{docCache[f.id]=await pdfjsLib.getDocument({data:ab.slice(0)}).promise;}catch(_){}
+        }
+      }
+    }
+  }
+};
+
+function exportBackup(){SYNC.export();}
+function importBackup(){Q('fi-sync').click();}
+
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SINCRONIZACIÓN DIRECTA P2P (WebRTC / PeerJS + QR) — R0m3r014
+// Pase rápido cel ↔ laptop con los dos aparatos juntos. Sin archivo intermedio.
+// El emparejamiento usa el servidor gratuito de PeerJS (solo señalización);
+// la data viaja DIRECTA entre los dos navegadores, nunca pasa por la nube.
+// ══════════════════════════════════════════════════════════════════════════
+const P2P={
+  peer:null, conn:null, scanStream:null, scanRAF:null, role:null,
+
+  // Carga PeerJS bajo demanda (no pesa al abrir la app)
+  async ensureLib(){
+    if(window.Peer)return true;
+    await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js');
+    return !!window.Peer;
+  },
+  async ensureQRLibs(){
+    if(!window.QRCode)await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    if(!window.jsQR)await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js');
+  },
+  _loadScript(src){
+    return new Promise((res,rej)=>{
+      const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('No se pudo cargar '+src));
+      document.head.appendChild(s);
+    });
+  },
+
+  // ID corto y legible (6 caracteres) para emparejar
+  shortId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return 'OP-'+s;},
+
+  // ── ABRIR PANEL ──
+  async open(){
+    Q('m-p2p-body').innerHTML=`<div style="text-align:center;padding:14px 0;color:#8b949e;font-size:13px;">Cargando módulo de sincronización…</div>`;
+    pushNav();openOv('m-p2p');
+    try{
+      if(!('RTCPeerConnection' in window)){throw new Error('Tu navegador no soporta WebRTC.');}
+      await this.ensureLib();
+      if(!window.Peer)throw new Error('No se pudo cargar PeerJS. ¿Hay internet?');
+      this.showMenu();
+    }catch(e){
+      Q('m-p2p-body').innerHTML=`<div style="padding:14px;color:#f97316;font-size:13px;line-height:1.6;">⚠️ ${e.message}<br><br>Necesitas internet para emparejar (solo el emparejamiento, los datos van directos). Si no hay señal, usa <b>📤 Exportar / 📥 Importar</b>.</div>`;
+    }
+  },
+
+  showMenu(){
+    Q('m-p2p-body').innerHTML=`
+      <p style="color:#8b949e;font-size:12px;line-height:1.6;margin-bottom:14px;">
+        Conecta dos dispositivos que estén <b>juntos y con internet</b>. La data viaja directa entre ellos.
+      </p>
+      <button class="bpri" style="width:100%;margin-bottom:10px;" onclick="P2P.startSend()">📤 ENVIAR desde aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Manda todo a otro dispositivo</div></button>
+      <button class="bpri" style="width:100%;background:#60a5fa;margin-bottom:6px;" onclick="P2P.startReceive()">📥 RECIBIR aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Trae datos desde otro dispositivo</div></button>
+    `;
+  },
+
+  // ── RECIBIR: este equipo crea un ID, muestra QR + código, espera conexión ──
+  async startReceive(){
+    this.role='recv';
+    const id=this.shortId();
+    Q('m-p2p-body').innerHTML=`
+      <p style="font-size:12px;color:#8b949e;margin-bottom:10px;line-height:1.5;">En el otro dispositivo: toca <b>📤 Enviar</b> y escanea este QR (o teclea el código).</p>
+      <div id="qr-box" style="background:#fff;padding:14px;border-radius:12px;display:flex;justify-content:center;margin-bottom:12px;"></div>
+      <div style="text-align:center;font-size:22px;font-weight:800;letter-spacing:3px;color:#22d3a8;margin-bottom:12px;">${id}</div>
+      <div id="p2p-status" style="text-align:center;font-size:12px;color:#8b949e;padding:8px;background:#21262d;border-radius:8px;">⏳ Esperando conexión…</div>
+    `;
+    try{
+      await this.ensureQRLibs();
+      new QRCode(Q('qr-box'),{text:id,width:180,height:180,colorDark:'#0d1117',colorLight:'#ffffff'});
+    }catch(_){Q('qr-box').innerHTML='<div style="color:#0d1117;font-size:12px;text-align:center;padding:20px;">Usa el código de abajo ↓</div>';}
+
+    this.peer=new Peer(id,{debug:1});
+    this.peer.on('error',e=>this.setStatus(`⚠️ Error: ${e.type||e.message}. Reintenta o usa exportar/importar.`,'#f97316'));
+    this.peer.on('connection',c=>{
+      this.conn=c;
+      this.setStatus('🔗 Conectado. Recibiendo datos…','#22d3a8');
+      let chunks=[],expected=null;
+      c.on('data',async d=>{
+        if(d&&d.__meta){expected=d.size;this.setStatus(`📥 Recibiendo… 0%`,'#22d3a8');return;}
+        if(d&&d.__chunk!=null){
+          chunks[d.__chunk]=d.data;
+          const got=chunks.filter(Boolean).length;
+          if(expected)this.setStatus(`📥 Recibiendo… ${Math.round(got/expected*100)}%`,'#22d3a8');
+          return;
+        }
+        if(d&&d.__done){
+          this.setStatus('✓ Recibido. Procesando…','#22d3a8');
+          try{
+            const json=chunks.join('');
+            const pkg=JSON.parse(json);
+            this.cleanup();closeOv('m-p2p');
+            await P2P.handleIncoming(pkg);
+          }catch(e){this.setStatus('⚠️ Datos corruptos: '+e.message,'#f97316');}
+        }
+      });
+      c.on('close',()=>this.setStatus('Conexión cerrada.','#8b949e'));
+    });
+  },
+
+  // ── ENVIAR: pide el ID del receptor (QR cámara o tecleado), conecta y manda ──
+  async startSend(){
+    this.role='send';
+    Q('m-p2p-body').innerHTML=`
+      <p style="font-size:12px;color:#8b949e;margin-bottom:12px;line-height:1.5;">Escanea el QR del otro dispositivo, o teclea su código:</p>
+      <button class="bpri" style="width:100%;margin-bottom:10px;" onclick="P2P.startScan()">📷 Escanear QR</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input class="inp" id="p2p-code" placeholder="OP-XXXXXX" style="flex:1;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;" maxlength="9"/>
+        <button class="bpri" style="flex:unset;padding:13px 18px;" onclick="P2P.connectTo(Q('p2p-code').value.trim().toUpperCase())">Conectar</button>
+      </div>
+      <video id="p2p-video" playsinline style="display:none;width:100%;border-radius:10px;background:#000;margin-top:8px;"></video>
+      <canvas id="p2p-canvas" style="display:none;"></canvas>
+      <div id="p2p-status" style="text-align:center;font-size:12px;color:#8b949e;padding:8px;background:#21262d;border-radius:8px;margin-top:10px;display:none;"></div>
+    `;
+  },
+
+  async startScan(){
+    try{
+      await this.ensureQRLibs();
+      const v=Q('p2p-video');v.style.display='block';
+      this.scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      v.srcObject=this.scanStream;await v.play();
+      const cv=Q('p2p-canvas'),ctx=cv.getContext('2d',{willReadFrequently:true});
+      const tick=()=>{
+        if(v.readyState===v.HAVE_ENOUGH_DATA){
+          cv.width=v.videoWidth;cv.height=v.videoHeight;
+          ctx.drawImage(v,0,0,cv.width,cv.height);
+          const img=ctx.getImageData(0,0,cv.width,cv.height);
+          const code=window.jsQR?jsQR(img.data,img.width,img.height):null;
+          if(code&&code.data){this.stopScan();this.connectTo(code.data.trim().toUpperCase());return;}
+        }
+        this.scanRAF=requestAnimationFrame(tick);
+      };
+      this.scanRAF=requestAnimationFrame(tick);
+    }catch(e){this.setStatus('⚠️ No se pudo abrir la cámara. Teclea el código.','#f97316');}
+  },
+  stopScan(){
+    if(this.scanRAF)cancelAnimationFrame(this.scanRAF);this.scanRAF=null;
+    if(this.scanStream){this.scanStream.getTracks().forEach(t=>t.stop());this.scanStream=null;}
+    const v=Q('p2p-video');if(v){v.style.display='none';v.srcObject=null;}
+  },
+
+  async connectTo(targetId){
+    if(!targetId||!/^OP-[A-Z0-9]{6}$/.test(targetId)){this.setStatus('Código inválido. Debe ser OP-XXXXXX.','#f97316');return;}
+    this.stopScan();
+    this.setStatus('🔗 Conectando…','#22d3a8');
+    try{
+      if(!this.peer){this.peer=new Peer({debug:1});await new Promise((res,rej)=>{this.peer.on('open',res);this.peer.on('error',e=>rej(e));setTimeout(()=>rej(new Error('timeout')),9000);});}
+      const c=this.peer.connect(targetId,{reliable:true});
+      this.conn=c;
+      c.on('open',async()=>{
+        this.setStatus('🔗 Conectado. Enviando…','#22d3a8');
+        await this.sendData(c);
+      });
+      c.on('error',e=>this.setStatus('⚠️ Error de conexión: '+(e.type||e.message),'#f97316'));
+    }catch(e){this.setStatus('⚠️ No se pudo conectar: '+(e.message||e.type)+'. ¿El otro equipo está en "Recibir"?','#f97316');}
+  },
+
+  // Construye el paquete (igual que SYNC.export) y lo manda por trozos
+  async sendData(c){
+    try{
+      const pkg=await this.buildPackage((p,m)=>this.setStatus(m||`Empaquetando… ${p}%`,'#22d3a8'));
+      const json=JSON.stringify(pkg);
+      const CHUNK=60000; // ~60KB por trozo, seguro para datachannel
+      const total=Math.ceil(json.length/CHUNK);
+      c.send({__meta:true,size:total});
+      for(let i=0;i<total;i++){
+        c.send({__chunk:i,data:json.slice(i*CHUNK,(i+1)*CHUNK)});
+        if(i%5===0){this.setStatus(`📤 Enviando… ${Math.round((i+1)/total*100)}%`,'#22d3a8');await new Promise(r=>setTimeout(r,15));}
+      }
+      c.send({__done:true});
+      this.setStatus('✓ Enviado correctamente. Listo.','#22d3a8');
+      setTimeout(()=>{this.cleanup();},1500);
+    }catch(e){this.setStatus('⚠️ Falló el envío: '+e.message,'#f97316');}
+  },
+
+  // Mismo formato que SYNC para reutilizar la importación
+  async buildPackage(onProg){
+    const pdfBlobs={};
+    let total=0;obras.forEach(o=>o.pdfs.forEach(()=>total++));let done=0;
+    for(const o of obras)for(const f of o.pdfs){
+      done++;onProg&&onProg(Math.round(done/Math.max(1,total)*70),`Empaquetando planos ${done}/${total}…`);
+      const ab=await DB.get(f.id);if(ab)pdfBlobs[f.id]=SYNC.abToB64(ab);
+    }
+    return {
+      app:'ObraPines',version:SYNC.VERSION,exportedAt:new Date().toISOString(),
+      device:navigator.userAgent.slice(0,80),counters:{nObraId,nPdfId},
+      obras,customCats,
+      repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
+      pdfBlobs
+    };
+  },
+
+  // Receptor: reusa el flujo de importación (resumen + combinar/reemplazar)
+  async handleIncoming(pkg){
+    if(!pkg||pkg.app!=='ObraPines'||!Array.isArray(pkg.obras)){await showAlert('Error','Los datos recibidos no son válidos.');return;}
+    const inObras=pkg.obras.length;
+    const inPins=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0),0);
+    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.foto).length||0),0),0);
+    const curObras=obras.length;
+    const curPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
+    const choice=await SYNC.askMode(
+      `📡 DATOS RECIBIDOS (P2P)\n· ${inObras} obra(s) · ${inPins} evidencia(s) · ${inFotos} foto(s)\n\n📱 LO QUE TIENES AHORA\n· ${curObras} obra(s) · ${curPins} evidencia(s)\n\n¿Qué quieres hacer?`);
+    if(choice==='cancel')return;
+    try{localStorage.setItem('obrapines_safety',JSON.stringify({obras,customCats,counters:{nObraId,nPdfId},at:new Date().toISOString()}));}catch(_){}
+    if(choice==='replace'){
+      const ok=await showConfirm('⚠️ Reemplazar TODO',`Esto borrará tus ${curObras} obra(s) actuales.\n\n¿Seguro?`,{ok:'Sí, reemplazar',danger:true});
+      if(!ok)return;await SYNC.doReplace(pkg);
+    }else await SYNC.doMerge(pkg);
+  },
+
+  setStatus(msg,color){const el=Q('p2p-status');if(el){el.style.display='block';el.textContent=msg;el.style.color=color||'#8b949e';}},
+  cleanup(){this.stopScan();try{this.conn&&this.conn.close();}catch(_){}try{this.peer&&this.peer.destroy();}catch(_){}this.conn=null;this.peer=null;},
+  close(){this.cleanup();closeOv('m-p2p');}
+};
+function openP2P(){P2P.open();}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
+history.replaceState({base:true},'');
+(async()=>{await loadData();renderObrasList();await FOLDER.restore();})();
+</script>
+</body>
+</html>
