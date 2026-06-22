@@ -329,10 +329,9 @@ textarea.inp{min-height:72px;resize:vertical;font-size:14px;line-height:1.5;}
     <input class="inp" type="text" id="pin-resp" placeholder="Carpinteros, Instalaciones, LGH…" list="resp-list" autocomplete="off"/>
     <datalist id="resp-list"><option value="Carpinteros"/><option value="Herrerería"/><option value="Instalaciones"/><option value="Plomería"/><option value="Electricidad"/><option value="Acabados"/><option value="Aplanados"/><option value="Impermeabilización"/><option value="LGH"/><option value="ASIPSA"/><option value="Residente"/></datalist>
     <span class="mlbl">Foto</span>
-    <div class="foto-row" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="foto-row" style="grid-template-columns:1fr 1fr;">
       <label class="fotobtn">📷 Cámara<input type="file" id="fi-cam" accept="image/*,.heic,.heif" capture="environment" onchange="pickFoto(this,'cam')"/></label>
       <label class="fotobtn">🖼️ Galería<input type="file" id="fi-gal" accept="image/*,.heic,.heif" onchange="pickFoto(this,'gal')"/></label>
-      <label class="fotobtn">💬 WhatsApp<input type="file" id="fi-wa" accept="image/*,.heic,.heif" onchange="pickFoto(this,'wa')"/></label>
     </div>
     <div id="sender-block" style="display:none;">
       <span class="mlbl">Enviado por (opcional)</span>
@@ -1583,15 +1582,17 @@ const SYNC={
   },
 
   // ── EXPORTAR: construye el paquete completo y lo descarga ──
-  async export(){
+  async export(scopeObraId){
     try{
+      // Determinar qué obras exportar
+      const srcObras = (scopeObraId!=null) ? obras.filter(o=>o.id===scopeObraId) : obras;
+      if(!srcObras.length){await showAlert('Sin datos','No hay obras para exportar.');return;}
       setLoading('Preparando respaldo…',5);
-      // Recolectar PDFs binarios desde IndexedDB
       const pdfBlobs={};
       let totalPdfs=0;
-      for(const o of obras)for(const f of o.pdfs)totalPdfs++;
+      for(const o of srcObras)for(const f of o.pdfs)totalPdfs++;
       let done=0;
-      for(const o of obras)for(const f of o.pdfs){
+      for(const o of srcObras)for(const f of o.pdfs){
         done++;
         setLoading(`Empaquetando planos ${done}/${totalPdfs}…`,Math.round(done/Math.max(1,totalPdfs)*70));
         const ab=await DB.get(f.id);
@@ -1602,9 +1603,10 @@ const SYNC={
         app:'ObraPines',
         version:this.VERSION,
         exportedAt:new Date().toISOString(),
+        scope:(scopeObraId!=null)?'obra':'all',
         device:navigator.userAgent.slice(0,80),
         counters:{nObraId,nPdfId},
-        obras:obras,
+        obras:srcObras,
         customCats:customCats,
         repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
         pdfBlobs:pdfBlobs
@@ -1612,19 +1614,44 @@ const SYNC={
       const json=JSON.stringify(pkg);
       const blob=new Blob([json],{type:'application/json'});
       const stamp=new Date().toISOString().slice(0,10);
-      const fname=`ObraPines_RESPALDO_${stamp}.json`;
+      const safeName=(scopeObraId!=null)?('_'+(srcObras[0].name||'OBRA').replace(/[^A-Za-z0-9]+/g,'').slice(0,20)):'';
+      const fname=`ObraPines_RESPALDO${safeName}_${stamp}.json`;
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');a.href=url;a.download=fname;
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),5000);
       setLoading(null);
       const mb=(json.length/1048576).toFixed(1);
-      const nPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
-      const nFotos=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0),0);
+      const nPins=srcObras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
+      const nFotos=srcObras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0),0);
       await showAlert('✓ Respaldo generado',
-        `Archivo: ${fname}\nTamaño: ${mb} MB\n\nContiene:\n· ${obras.length} obra(s)\n· ${totalPdfs} plano(s)\n· ${nPins} evidencia(s)\n· ${nFotos} foto(s)\n\nGuárdalo en Drive o mándatelo por WhatsApp. Para editar en otro equipo, ábrelo con "Importar".`);
+        `Archivo: ${fname}\nTamaño: ${mb} MB\n\nContiene:\n· ${srcObras.length} obra(s)\n· ${totalPdfs} plano(s)\n· ${nPins} evidencia(s)\n· ${nFotos} foto(s)\n\nGuárdalo en Drive o mándatelo a ti mismo. Para editar en otro equipo, ábrelo con "Importar".`);
     }catch(e){setLoading(null);console.warn('export',e);await showAlert('Error',`No se pudo generar el respaldo.\n${e.message}`);}
   },
+
+  // Selector: exportar una obra específica o todo
+  chooseExport(){
+    let html=`<p style="color:#8b949e;font-size:13px;line-height:1.7;margin-bottom:4px;">¿Qué quieres exportar a un archivo?</p>`;
+    const row=Q('mc-btns');
+    Q('mc-ttl').innerHTML='📤 Exportar respaldo';
+    let body=`<button class="bpri" style="width:100%;margin-bottom:8px;text-align:left;" onclick="SYNC._doExport(null)">📦 TODO el historial<div style="font-size:10px;font-weight:400;opacity:.85;">${obras.length} obra(s)</div></button>`;
+    body+=`<div style="max-height:40vh;overflow-y:auto;">`;
+    obras.forEach(o=>{
+      const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
+      body+=`<button class="bsec" style="width:100%;margin-bottom:6px;text-align:left;display:flex;align-items:center;gap:10px;" onclick="SYNC._doExport(${o.id})">
+        <span style="width:12px;height:12px;border-radius:50%;background:${o.color};flex-shrink:0;"></span>
+        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${o.name}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
+      </button>`;
+    });
+    body+=`</div>`;
+    Q('mc-body').innerHTML=html+body;
+    row.innerHTML='';row.style.flexDirection='row';
+    const bc=document.createElement('button');bc.className='bsec';bc.style.width='100%';bc.textContent='Cancelar';bc.onclick=()=>closeOv('m-confirm');
+    row.appendChild(bc);
+    pushNav();openOv('m-confirm');
+  },
+  _doExport(id){closeOv('m-confirm');this.export(id);},
+
 
   // ── IMPORTAR: lee el archivo, muestra resumen, pregunta qué hacer ──
   async import(input){
@@ -1664,9 +1691,11 @@ const SYNC={
     }catch(_){/* si no cabe, seguimos igual */}
 
     if(choice==='replace'){
-      const ok=await showConfirm('⚠️ Reemplazar TODO',
-        `Esto BORRARÁ tus ${curObras} obra(s) actuales y dejará solo las ${inObras} del respaldo.\n\n¿Seguro? (Se guardó una copia de emergencia por si acaso.)`,
-        {ok:'Sí, reemplazar',danger:true});
+      const isObra=pkg.scope==='obra'&&pkg.obras.length===1;
+      const msg=isObra
+        ? `Esto reemplazará SOLO la obra "${pkg.obras[0].name}" con la versión del respaldo. Tus demás obras NO se tocan.\n\n¿Continuar?`
+        : `Esto BORRARÁ tus ${curObras} obra(s) actuales y dejará solo las ${inObras} del respaldo.\n\n¿Seguro? (Se guardó una copia de emergencia por si acaso.)`;
+      const ok=await showConfirm(isObra?'⚠️ Reemplazar esta obra':'⚠️ Reemplazar TODO',msg,{ok:'Sí, reemplazar',danger:true});
       if(!ok)return;
       await this.doReplace(pkg);
     }else{
@@ -1699,11 +1728,31 @@ const SYNC={
   async doReplace(pkg){
     setLoading('Importando (reemplazar)…',10);
     try{
-      // Limpiar PDFs viejos de IndexedDB
+      // Si el paquete es de UNA obra específica, reemplazar SOLO esa obra (no todo)
+      if(pkg.scope==='obra' && pkg.obras.length===1){
+        const imp=pkg.obras[0];
+        const norm=s=>(s||'').trim().toUpperCase();
+        const idx=obras.findIndex(o=>norm(o.name)===norm(imp.name));
+        // Borrar PDFs de la obra que se va a reemplazar (si existía)
+        if(idx>=0){for(const f of obras[idx].pdfs){await DB.del(f.id);delete docCache[f.id];}}
+        // Reasignar IDs nuevos para los PDFs entrantes
+        const newObra={...imp,id:(idx>=0?obras[idx].id:nObraId++),pdfs:[]};
+        for(const f of imp.pdfs){
+          const nid=nPdfId++;newObra.pdfs.push({...f,id:nid});
+          if(pkg.pdfBlobs&&pkg.pdfBlobs[f.id]){const ab=this.b64ToAb(pkg.pdfBlobs[f.id]);if(ab){await DB.put(nid,ab);try{docCache[nid]=await pdfjsLib.getDocument({data:ab.slice(0)}).promise;}catch(_){}}}
+        }
+        if(idx>=0)obras[idx]=newObra;else obras.push(newObra);
+        // Combinar categorías personalizadas
+        const catIds=new Set(customCats.map(c=>c.id));(pkg.customCats||[]).forEach(c=>{if(!catIds.has(c.id))customCats.push(c);});
+        persist();persistCats();
+        setLoading(null);actObra=null;actPdf=null;goObras();
+        toast(`✓ Obra "${imp.name}" reemplazada`,3500);
+        return;
+      }
+      // Reemplazo TOTAL (historial completo)
       for(const o of obras)for(const f of o.pdfs){await DB.del(f.id);}
       Object.keys(docCache).forEach(k=>delete docCache[k]);
       Object.keys(pageCache).forEach(k=>{URL.revokeObjectURL(pageCache[k]?.blobURL);delete pageCache[k];});
-      // Cargar nuevo estado
       obras=pkg.obras;
       customCats=pkg.customCats||[];
       if(pkg.counters){nObraId=pkg.counters.nObraId||1;nPdfId=pkg.counters.nPdfId||1;}
@@ -1814,21 +1863,32 @@ const SYNC={
   }
 };
 
-function exportBackup(){SYNC.export();}
+function exportBackup(){SYNC.chooseExport();}
 function importBackup(){Q('fi-sync').click();}
 
 
 
 // ══════════════════════════════════════════════════════════════════════════
-// SINCRONIZACIÓN DIRECTA P2P (WebRTC / PeerJS + QR) — R0m3r014
-// Pase rápido cel ↔ laptop con los dos aparatos juntos. Sin archivo intermedio.
-// El emparejamiento usa el servidor gratuito de PeerJS (solo señalización);
-// la data viaja DIRECTA entre los dos navegadores, nunca pasa por la nube.
+// SINCRONIZACIÓN DIRECTA P2P (WebRTC / PeerJS) v2 — R0m3r014
+// Mejoras: servidores TURN (cruza redes difíciles), reintentos automáticos,
+// código de pareja privado, QR, y selección de obra específica o todo.
+// Regla de oro: el CEL siempre ENVÍA, la LAPTOP siempre RECIBE (más estable).
 // ══════════════════════════════════════════════════════════════════════════
 const P2P={
-  peer:null, conn:null, scanStream:null, scanRAF:null, role:null,
+  peer:null, conn:null, scanStream:null, scanRAF:null, role:null, selScope:null,
 
-  // Carga PeerJS bajo demanda (no pesa al abrir la app)
+  // ICE servers: STUN (descubrir IP) + TURN público gratuito (relevo si el directo falla)
+  iceConfig(){
+    return {'iceServers':[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      // TURN abiertos de openrelay (gratuitos) — permiten cruzar redes/NAT difíciles
+      {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+      {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+      {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+    ]};
+  },
+
   async ensureLib(){
     if(window.Peer)return true;
     await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js');
@@ -1845,89 +1905,166 @@ const P2P={
     });
   },
 
-  // ID corto y legible (6 caracteres) para emparejar
   shortId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return 'OP-'+s;},
+
+  // Código de pareja guardado: lo conviertes en un ID válido de PeerJS
+  pairId(){let p=localStorage.getItem('obrapines_pair')||'';return p?('OPP-'+p.toUpperCase().replace(/[^A-Z0-9]/g,'')):null;},
+  setPair(code){const clean=(code||'').toUpperCase().replace(/[^A-Z0-9\-]/g,'');localStorage.setItem('obrapines_pair',clean);return clean;},
 
   // ── ABRIR PANEL ──
   async open(){
-    Q('m-p2p-body').innerHTML=`<div style="text-align:center;padding:14px 0;color:#8b949e;font-size:13px;">Cargando módulo de sincronización…</div>`;
+    Q('m-p2p-body').innerHTML=`<div style="text-align:center;padding:14px 0;color:#8b949e;font-size:13px;">Cargando módulo…</div>`;
     pushNav();openOv('m-p2p');
     try{
-      if(!('RTCPeerConnection' in window)){throw new Error('Tu navegador no soporta WebRTC.');}
+      if(!('RTCPeerConnection' in window))throw new Error('Tu navegador no soporta WebRTC.');
       await this.ensureLib();
       if(!window.Peer)throw new Error('No se pudo cargar PeerJS. ¿Hay internet?');
       this.showMenu();
     }catch(e){
-      Q('m-p2p-body').innerHTML=`<div style="padding:14px;color:#f97316;font-size:13px;line-height:1.6;">⚠️ ${e.message}<br><br>Necesitas internet para emparejar (solo el emparejamiento, los datos van directos). Si no hay señal, usa <b>📤 Exportar / 📥 Importar</b>.</div>`;
+      Q('m-p2p-body').innerHTML=`<div style="padding:14px;color:#f97316;font-size:13px;line-height:1.6;">⚠️ ${e.message}<br><br>Necesitas internet para emparejar. Si no hay señal, usa <b>📤 Exportar / 📥 Importar</b>.</div>`;
     }
   },
 
   showMenu(){
+    const pair=localStorage.getItem('obrapines_pair')||'';
     Q('m-p2p-body').innerHTML=`
-      <p style="color:#8b949e;font-size:12px;line-height:1.6;margin-bottom:14px;">
-        Conecta dos dispositivos que estén <b>juntos y con internet</b>. La data viaja directa entre ellos.
+      <p style="color:#8b949e;font-size:12px;line-height:1.6;margin-bottom:12px;">
+        Conecta dos dispositivos <b>juntos y con internet</b>. Lo más estable: <b>enviar desde el cel, recibir en la laptop</b>.
       </p>
-      <button class="bpri" style="width:100%;margin-bottom:10px;" onclick="P2P.startSend()">📤 ENVIAR desde aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Manda todo a otro dispositivo</div></button>
-      <button class="bpri" style="width:100%;background:#60a5fa;margin-bottom:6px;" onclick="P2P.startReceive()">📥 RECIBIR aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Trae datos desde otro dispositivo</div></button>
+      <button class="bpri" style="width:100%;margin-bottom:10px;" onclick="P2P.chooseScope()">📤 ENVIAR desde aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Eliges qué obra mandar (o todo)</div></button>
+      <button class="bpri" style="width:100%;background:#60a5fa;margin-bottom:14px;" onclick="P2P.startReceive()">📥 RECIBIR aquí<div style="font-size:10px;font-weight:400;opacity:.85;margin-top:2px;">Espera datos de otro dispositivo</div></button>
+      <div style="border-top:1px solid #30363d;padding-top:12px;">
+        <span class="mlbl" style="margin-top:0">Código de pareja (opcional, para no escanear)</span>
+        <div style="display:flex;gap:8px;">
+          <input class="inp" id="pair-code" value="${pair}" placeholder="Ej: IVAN-CABO" style="flex:1;text-transform:uppercase;letter-spacing:1px;"/>
+          <button class="bsec" style="padding:11px 14px;" onclick="P2P.savePairUI()">Guardar</button>
+        </div>
+        <p style="font-size:10px;color:#8b949e;margin-top:6px;line-height:1.5;">Pon el <b>mismo código en ambos aparatos</b> (cel y laptop). Luego solo tocas Enviar/Recibir y se emparejan solos, sin QR.</p>
+      </div>
     `;
   },
+  savePairUI(){
+    const v=Q('pair-code').value.trim();
+    if(v.length<4){toast('El código debe tener al menos 4 letras');return;}
+    const clean=this.setPair(v);
+    toast(`✓ Código de pareja: ${clean}`);
+  },
 
-  // ── RECIBIR: este equipo crea un ID, muestra QR + código, espera conexión ──
+  // ── ELEGIR QUÉ ENVIAR: una obra o todo ──
+  chooseScope(){
+    let html=`<p style="font-size:12px;color:#8b949e;margin-bottom:12px;">¿Qué quieres enviar?</p>`;
+    html+=`<button class="bpri" style="width:100%;margin-bottom:8px;text-align:left;" onclick="P2P.scopeAll()">📦 TODO el historial<div style="font-size:10px;font-weight:400;opacity:.85;">${obras.length} obra(s) completas</div></button>`;
+    html+=`<div style="max-height:38vh;overflow-y:auto;margin-top:4px;">`;
+    obras.forEach(o=>{
+      const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
+      html+=`<button class="bsec" style="width:100%;margin-bottom:6px;text-align:left;display:flex;align-items:center;gap:10px;" onclick="P2P.scopeObra('${o.id}')">
+        <span style="width:12px;height:12px;border-radius:50%;background:${o.color};flex-shrink:0;"></span>
+        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${o.name}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
+      </button>`;
+    });
+    html+=`</div><button class="bsec" style="width:100%;margin-top:8px;" onclick="P2P.showMenu()">‹ Volver</button>`;
+    Q('m-p2p-body').innerHTML=html;
+  },
+  scopeAll(){this.selScope={type:'all'};this.startSend();},
+  scopeObra(id){this.selScope={type:'obra',id:+id};this.startSend();},
+
+  // ── RECIBIR ──
   async startReceive(){
     this.role='recv';
-    const id=this.shortId();
+    const pair=this.pairId();
+    const id=pair||this.shortId();
+    const showCode=pair?(localStorage.getItem('obrapines_pair')||'').toUpperCase():id;
     Q('m-p2p-body').innerHTML=`
-      <p style="font-size:12px;color:#8b949e;margin-bottom:10px;line-height:1.5;">En el otro dispositivo: toca <b>📤 Enviar</b> y escanea este QR (o teclea el código).</p>
-      <div id="qr-box" style="background:#fff;padding:14px;border-radius:12px;display:flex;justify-content:center;margin-bottom:12px;"></div>
-      <div style="text-align:center;font-size:22px;font-weight:800;letter-spacing:3px;color:#22d3a8;margin-bottom:12px;">${id}</div>
+      <p style="font-size:12px;color:#8b949e;margin-bottom:10px;line-height:1.5;">
+        ${pair?'Emparejando por <b>código de pareja</b>. En el otro aparato toca <b>Enviar</b>.':'En el otro dispositivo: toca <b>📤 Enviar</b> y escanea este QR (o teclea el código).'}
+      </p>
+      ${pair?'':`<div id="qr-box" style="background:#fff;padding:14px;border-radius:12px;display:flex;justify-content:center;margin-bottom:12px;"></div>`}
+      <div style="text-align:center;font-size:${pair?'18':'22'}px;font-weight:800;letter-spacing:2px;color:#22d3a8;margin-bottom:12px;">${showCode}</div>
       <div id="p2p-status" style="text-align:center;font-size:12px;color:#8b949e;padding:8px;background:#21262d;border-radius:8px;">⏳ Esperando conexión…</div>
+      <button class="bsec" style="width:100%;margin-top:10px;" onclick="P2P.showMenu()">‹ Volver</button>
     `;
-    try{
-      await this.ensureQRLibs();
-      new QRCode(Q('qr-box'),{text:id,width:180,height:180,colorDark:'#0d1117',colorLight:'#ffffff'});
-    }catch(_){Q('qr-box').innerHTML='<div style="color:#0d1117;font-size:12px;text-align:center;padding:20px;">Usa el código de abajo ↓</div>';}
-
-    this.peer=new Peer(id,{debug:1});
-    this.peer.on('error',e=>this.setStatus(`⚠️ Error: ${e.type||e.message}. Reintenta o usa exportar/importar.`,'#f97316'));
-    this.peer.on('connection',c=>{
-      this.conn=c;
-      this.setStatus('🔗 Conectado. Recibiendo datos…','#22d3a8');
-      let chunks=[],expected=null;
-      c.on('data',async d=>{
-        if(d&&d.__meta){expected=d.size;this.setStatus(`📥 Recibiendo… 0%`,'#22d3a8');return;}
-        if(d&&d.__chunk!=null){
-          chunks[d.__chunk]=d.data;
-          const got=chunks.filter(Boolean).length;
-          if(expected)this.setStatus(`📥 Recibiendo… ${Math.round(got/expected*100)}%`,'#22d3a8');
-          return;
-        }
-        if(d&&d.__done){
-          this.setStatus('✓ Recibido. Procesando…','#22d3a8');
-          try{
-            const json=chunks.join('');
-            const pkg=JSON.parse(json);
-            this.cleanup();closeOv('m-p2p');
-            await P2P.handleIncoming(pkg);
-          }catch(e){this.setStatus('⚠️ Datos corruptos: '+e.message,'#f97316');}
-        }
-      });
-      c.on('close',()=>this.setStatus('Conexión cerrada.','#8b949e'));
-    });
+    if(!pair){
+      try{await this.ensureQRLibs();new QRCode(Q('qr-box'),{text:id,width:180,height:180,colorDark:'#0d1117',colorLight:'#ffffff'});}
+      catch(_){Q('qr-box')&&(Q('qr-box').innerHTML='<div style="color:#0d1117;font-size:12px;padding:20px;">Usa el código ↓</div>');}
+    }
+    this._createReceiverPeer(id);
   },
 
-  // ── ENVIAR: pide el ID del receptor (QR cámara o tecleado), conecta y manda ──
+  _createReceiverPeer(id){
+    this.cleanup(true);
+    const isPair=id.startsWith('OPP-');
+    this.peer=new Peer(id,{debug:1,config:this.iceConfig()});
+    this.peer.on('error',e=>{
+      if(e.type==='unavailable-id'){
+        if(isPair){
+          // Código de pareja: NO cambiar el ID (el emisor busca ese exacto).
+          // Suele ser una sesión anterior colgada; esperar y reintentar el MISMO id.
+          this.setStatus('⚠️ Sesión anterior aún activa. Reintentando en 5s…','#f97316');
+          setTimeout(()=>this._createReceiverPeer(id),5000);
+        }else{
+          // QR (id aleatorio): colisión casi imposible; pedir reabrir
+          this.setStatus('⚠️ Código en uso (raro). Cierra y reabre "Recibir".','#f97316');
+        }
+        return;
+      }
+      this.setStatus(`⚠️ ${e.type||e.message}. Reintenta o usa exportar/importar.`,'#f97316');
+    });
+    this.peer.on('open',()=>this.setStatus('⏳ Esperando conexión…','#8b949e'));
+    this.peer.on('connection',c=>{this._wireReceiver(c);});
+  },
+
+  _wireReceiver(c){
+    this.conn=c;
+    this.setStatus('🔗 Conectado. Recibiendo…','#22d3a8');
+    let chunks=[],expected=null;
+    c.on('data',async d=>{
+      if(d&&d.__meta){expected=d.size;chunks=new Array(d.size);this.setStatus('📥 Recibiendo… 0%','#22d3a8');return;}
+      if(d&&d.__chunk!=null){
+        chunks[d.__chunk]=d.data;
+        const got=chunks.filter(x=>x!=null).length;
+        if(expected)this.setStatus(`📥 Recibiendo… ${Math.round(got/expected*100)}%`,'#22d3a8');
+        return;
+      }
+      if(d&&d.__done){
+        this.setStatus('✓ Recibido. Procesando…','#22d3a8');
+        try{
+          const json=chunks.join('');
+          const pkg=JSON.parse(json);
+          this.beep();
+          this.cleanup();closeOv('m-p2p');
+          await P2P.handleIncoming(pkg);
+        }catch(e){this.setStatus('⚠️ Datos incompletos: '+e.message,'#f97316');}
+      }
+    });
+    c.on('close',()=>this.setStatus('Conexión cerrada.','#8b949e'));
+    c.on('error',e=>this.setStatus('⚠️ '+(e.type||e.message),'#f97316'));
+  },
+
+  // ── ENVIAR ──
   async startSend(){
     this.role='send';
+    const pair=this.pairId();
+    if(pair){
+      // Con código de pareja: conecta directo, sin QR
+      Q('m-p2p-body').innerHTML=`
+        <p style="font-size:12px;color:#8b949e;margin-bottom:12px;line-height:1.5;">Emparejando por código con el otro aparato (que debe estar en <b>Recibir</b>)…</p>
+        <div id="p2p-status" style="text-align:center;font-size:12px;color:#8b949e;padding:8px;background:#21262d;border-radius:8px;">🔗 Conectando…</div>
+        <button class="bsec" style="width:100%;margin-top:10px;" onclick="P2P.showMenu()">‹ Volver</button>
+      `;
+      this.connectTo(pair);
+      return;
+    }
     Q('m-p2p-body').innerHTML=`
       <p style="font-size:12px;color:#8b949e;margin-bottom:12px;line-height:1.5;">Escanea el QR del otro dispositivo, o teclea su código:</p>
       <button class="bpri" style="width:100%;margin-bottom:10px;" onclick="P2P.startScan()">📷 Escanear QR</button>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input class="inp" id="p2p-code" placeholder="OP-XXXXXX" style="flex:1;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;" maxlength="9"/>
+        <input class="inp" id="p2p-code" placeholder="OP-XXXXXX" style="flex:1;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;" maxlength="14"/>
         <button class="bpri" style="flex:unset;padding:13px 18px;" onclick="P2P.connectTo(Q('p2p-code').value.trim().toUpperCase())">Conectar</button>
       </div>
       <video id="p2p-video" playsinline style="display:none;width:100%;border-radius:10px;background:#000;margin-top:8px;"></video>
       <canvas id="p2p-canvas" style="display:none;"></canvas>
       <div id="p2p-status" style="text-align:center;font-size:12px;color:#8b949e;padding:8px;background:#21262d;border-radius:8px;margin-top:10px;display:none;"></div>
+      <button class="bsec" style="width:100%;margin-top:10px;" onclick="P2P.showMenu()">‹ Volver</button>
     `;
   },
 
@@ -1957,58 +2094,74 @@ const P2P={
     const v=Q('p2p-video');if(v){v.style.display='none';v.srcObject=null;}
   },
 
-  async connectTo(targetId){
-    if(!targetId||!/^OP-[A-Z0-9]{6}$/.test(targetId)){this.setStatus('Código inválido. Debe ser OP-XXXXXX.','#f97316');return;}
+  async connectTo(targetId,attempt){
+    attempt=attempt||1;
+    if(!targetId){this.setStatus('Código vacío.','#f97316');return;}
+    // Acepta OP-XXXXXX (QR) o OPP-XXXX (código de pareja, con posible sufijo)
+    if(!/^(OP-[A-Z0-9]{6}|OPP-[A-Z0-9\-]{2,})/.test(targetId)){this.setStatus('Código inválido.','#f97316');return;}
     this.stopScan();
-    this.setStatus('🔗 Conectando…','#22d3a8');
+    this.setStatus(`🔗 Conectando… ${attempt>1?'(intento '+attempt+')':''}`,'#22d3a8');
     try{
-      if(!this.peer){this.peer=new Peer({debug:1});await new Promise((res,rej)=>{this.peer.on('open',res);this.peer.on('error',e=>rej(e));setTimeout(()=>rej(new Error('timeout')),9000);});}
+      if(!this.peer||this.peer.destroyed){
+        this.peer=new Peer({debug:1,config:this.iceConfig()});
+        await new Promise((res,rej)=>{this.peer.on('open',res);this.peer.on('error',e=>rej(e));setTimeout(()=>rej(new Error('timeout señalización')),12000);});
+      }
       const c=this.peer.connect(targetId,{reliable:true});
       this.conn=c;
-      c.on('open',async()=>{
-        this.setStatus('🔗 Conectado. Enviando…','#22d3a8');
-        await this.sendData(c);
-      });
-      c.on('error',e=>this.setStatus('⚠️ Error de conexión: '+(e.type||e.message),'#f97316'));
-    }catch(e){this.setStatus('⚠️ No se pudo conectar: '+(e.message||e.type)+'. ¿El otro equipo está en "Recibir"?','#f97316');}
+      let opened=false;
+      const giveUp=setTimeout(()=>{
+        if(!opened){
+          if(attempt<3){this.setStatus('Reintentando conexión…','#f97316');try{c.close();}catch(_){}; this.connectTo(targetId,attempt+1);}
+          else this.setStatus('⚠️ No se pudo conectar tras 3 intentos. ¿El otro está en "Recibir"? Si no, usa 📤 Exportar / 📥 Importar.','#f97316');
+        }
+      },10000);
+      c.on('open',async()=>{opened=true;clearTimeout(giveUp);this.setStatus('🔗 Conectado. Enviando…','#22d3a8');await this.sendData(c);});
+      c.on('error',e=>{this.setStatus('⚠️ '+(e.type||e.message),'#f97316');});
+    }catch(e){
+      if(attempt<3){setTimeout(()=>this.connectTo(targetId,attempt+1),1200);}
+      else this.setStatus('⚠️ No se pudo conectar: '+(e.message||e.type)+'. Usa exportar/importar.','#f97316');
+    }
   },
 
-  // Construye el paquete (igual que SYNC.export) y lo manda por trozos
   async sendData(c){
     try{
       const pkg=await this.buildPackage((p,m)=>this.setStatus(m||`Empaquetando… ${p}%`,'#22d3a8'));
       const json=JSON.stringify(pkg);
-      const CHUNK=60000; // ~60KB por trozo, seguro para datachannel
+      const CHUNK=16000; // 16KB: más seguro para datachannel en móviles
       const total=Math.ceil(json.length/CHUNK);
       c.send({__meta:true,size:total});
       for(let i=0;i<total;i++){
         c.send({__chunk:i,data:json.slice(i*CHUNK,(i+1)*CHUNK)});
-        if(i%5===0){this.setStatus(`📤 Enviando… ${Math.round((i+1)/total*100)}%`,'#22d3a8');await new Promise(r=>setTimeout(r,15));}
+        // Respiro periódico para no saturar el buffer en móvil
+        if(i%4===0){this.setStatus(`📤 Enviando… ${Math.round((i+1)/total*100)}%`,'#22d3a8');await new Promise(r=>setTimeout(r,20));}
       }
       c.send({__done:true});
-      this.setStatus('✓ Enviado correctamente. Listo.','#22d3a8');
-      setTimeout(()=>{this.cleanup();},1500);
+      this.setStatus('✓ Enviado correctamente.','#22d3a8');this.beep();
+      setTimeout(()=>{this.cleanup();},1800);
     }catch(e){this.setStatus('⚠️ Falló el envío: '+e.message,'#f97316');}
   },
 
-  // Mismo formato que SYNC para reutilizar la importación
+  // Construye el paquete según el alcance elegido (todo o una obra)
   async buildPackage(onProg){
+    let srcObras;
+    if(this.selScope&&this.selScope.type==='obra'){srcObras=obras.filter(o=>o.id===this.selScope.id);}
+    else srcObras=obras;
     const pdfBlobs={};
-    let total=0;obras.forEach(o=>o.pdfs.forEach(()=>total++));let done=0;
-    for(const o of obras)for(const f of o.pdfs){
+    let total=0;srcObras.forEach(o=>o.pdfs.forEach(()=>total++));let done=0;
+    for(const o of srcObras)for(const f of o.pdfs){
       done++;onProg&&onProg(Math.round(done/Math.max(1,total)*70),`Empaquetando planos ${done}/${total}…`);
       const ab=await DB.get(f.id);if(ab)pdfBlobs[f.id]=SYNC.abToB64(ab);
     }
     return {
       app:'ObraPines',version:SYNC.VERSION,exportedAt:new Date().toISOString(),
+      scope:this.selScope?this.selScope.type:'all',
       device:navigator.userAgent.slice(0,80),counters:{nObraId,nPdfId},
-      obras,customCats,
+      obras:srcObras,customCats,
       repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
       pdfBlobs
     };
   },
 
-  // Receptor: reusa el flujo de importación (resumen + combinar/reemplazar)
   async handleIncoming(pkg){
     if(!pkg||pkg.app!=='ObraPines'||!Array.isArray(pkg.obras)){await showAlert('Error','Los datos recibidos no son válidos.');return;}
     const inObras=pkg.obras.length;
@@ -2016,18 +2169,28 @@ const P2P={
     const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.foto).length||0),0),0);
     const curObras=obras.length;
     const curPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
+    const scopeTxt=pkg.scope==='obra'?`(solo la obra "${pkg.obras[0]?.name||''}")`:'(historial completo)';
     const choice=await SYNC.askMode(
-      `📡 DATOS RECIBIDOS (P2P)\n· ${inObras} obra(s) · ${inPins} evidencia(s) · ${inFotos} foto(s)\n\n📱 LO QUE TIENES AHORA\n· ${curObras} obra(s) · ${curPins} evidencia(s)\n\n¿Qué quieres hacer?`);
+      `📡 DATOS RECIBIDOS ${scopeTxt}\n· ${inObras} obra(s) · ${inPins} evidencia(s) · ${inFotos} foto(s)\n\n📱 LO QUE TIENES AHORA\n· ${curObras} obra(s) · ${curPins} evidencia(s)\n\n¿Qué quieres hacer?`);
     if(choice==='cancel')return;
     try{localStorage.setItem('obrapines_safety',JSON.stringify({obras,customCats,counters:{nObraId,nPdfId},at:new Date().toISOString()}));}catch(_){}
     if(choice==='replace'){
-      const ok=await showConfirm('⚠️ Reemplazar TODO',`Esto borrará tus ${curObras} obra(s) actuales.\n\n¿Seguro?`,{ok:'Sí, reemplazar',danger:true});
+      const isObra=pkg.scope==='obra'&&pkg.obras.length===1;
+      const rmsg=isObra
+        ? `Esto reemplazará SOLO la obra "${pkg.obras[0].name}". Tus demás obras NO se tocan.\n\n¿Continuar?`
+        : `Esto borrará tus ${curObras} obra(s) actuales.\n\n¿Seguro?`;
+      const ok=await showConfirm(isObra?'⚠️ Reemplazar esta obra':'⚠️ Reemplazar TODO',rmsg,{ok:'Sí, reemplazar',danger:true});
       if(!ok)return;await SYNC.doReplace(pkg);
     }else await SYNC.doMerge(pkg);
   },
 
+  // Sonido corto al completar
+  beep(){
+    try{const ac=new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator();const g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.15;o.start();o.frequency.setValueAtTime(880,ac.currentTime);o.frequency.setValueAtTime(1320,ac.currentTime+0.1);g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);o.stop(ac.currentTime+0.35);}catch(_){}
+  },
+
   setStatus(msg,color){const el=Q('p2p-status');if(el){el.style.display='block';el.textContent=msg;el.style.color=color||'#8b949e';}},
-  cleanup(){this.stopScan();try{this.conn&&this.conn.close();}catch(_){}try{this.peer&&this.peer.destroy();}catch(_){}this.conn=null;this.peer=null;},
+  cleanup(keepNothing){this.stopScan();try{this.conn&&this.conn.close();}catch(_){}try{this.peer&&this.peer.destroy();}catch(_){}this.conn=null;this.peer=null;if(!keepNothing)this.selScope=this.selScope;},
   close(){this.cleanup();closeOv('m-p2p');}
 };
 function openP2P(){P2P.open();}
