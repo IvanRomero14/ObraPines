@@ -443,14 +443,16 @@ const DB={
   async open(){
     if(this._db)return this._db;
     this._db=await new Promise((res,rej)=>{
-      const r=indexedDB.open('obrapines_db',2);
+      const r=indexedDB.open('obrapines_db',3);
       r.onupgradeneeded=e=>{
         const db=e.target.result;
         if(!db.objectStoreNames.contains('pdfs'))db.createObjectStore('pdfs',{keyPath:'id'});
         if(!db.objectStoreNames.contains('handles'))db.createObjectStore('handles',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'});
       };
       r.onsuccess=e=>res(e.target.result);
       r.onerror=()=>rej(r.error);
+      r.onblocked=()=>{console.warn('DB upgrade blocked: cierra otras pestañas de ObraPines');toast('⚠️ Cierra otras pestañas de ObraPines y recarga');};
     });
     return this._db;
   },
@@ -468,8 +470,60 @@ const DB={
   },
   async getHandle(id){
     try{const db=await this.open();return await new Promise((res,rej)=>{const r=db.transaction('handles').objectStore('handles').get(id);r.onsuccess=()=>res(r.result?.data||null);r.onerror=()=>rej(r.error);});}catch{return null;}
+  },
+  // ── FOTOS: guardadas como dataURL en su propio store (NO en localStorage) ──
+  async putPhoto(id,dataURL){
+    try{
+      const db=await this.open();
+      return await new Promise((res)=>{
+        let done=false;
+        const finish=v=>{if(!done){done=true;res(v);}};
+        const to=setTimeout(()=>{console.warn('putPhoto timeout');finish(false);},8000);
+        try{
+          const tx=db.transaction('photos','readwrite');
+          tx.objectStore('photos').put({id,data:dataURL});
+          tx.oncomplete=()=>{clearTimeout(to);finish(true);};
+          tx.onerror=()=>{clearTimeout(to);console.warn('putPhoto tx',tx.error);finish(false);};
+          tx.onabort=()=>{clearTimeout(to);console.warn('putPhoto abort');finish(false);};
+        }catch(e){clearTimeout(to);console.warn('putPhoto inner',e);finish(false);}
+      });
+    }catch(e){console.warn('putPhoto open',e);return false;}
+  },
+  async getPhoto(id){
+    if(!id)return null;
+    try{const db=await this.open();return await new Promise((res,rej)=>{const r=db.transaction('photos').objectStore('photos').get(id);r.onsuccess=()=>res(r.result?.data||null);r.onerror=()=>rej(r.error);});}catch{return null;}
+  },
+  async delPhoto(id){
+    if(!id)return;
+    try{const db=await this.open();await new Promise((res,rej)=>{const r=db.transaction('photos','readwrite').objectStore('photos').delete(id);r.onsuccess=res;r.onerror=()=>rej(r.error);});}catch(e){console.warn('delPhoto',e);}
+  },
+  async allPhotoIds(){
+    try{const db=await this.open();return await new Promise((res,rej)=>{const r=db.transaction('photos').objectStore('photos').getAllKeys();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}catch{return [];}
   }
 };
+
+// Generador de IDs internos únicos (nunca se renumeran)
+function uid(prefix){return (prefix||'id')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+// Cache en memoria de fotos ya cargadas (para no leer IndexedDB cada vez)
+const photoMem={};
+async function loadPhoto(fotoId){
+  if(!fotoId)return null;
+  if(photoMem[fotoId])return photoMem[fotoId];
+  const d=await DB.getPhoto(fotoId);
+  if(d)photoMem[fotoId]=d;
+  return d;
+}
+
+// ── ESCAPE HTML (#3) — evita inyección al pintar texto en innerHTML ──
+function esc(s){
+  return String(s==null?'':s)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
 
 // ══════════════════════════════════════════════════════════════════════════
 // EXPORTAR FOTOS A CARPETA DEL TELÉFONO (R0m3r014)
@@ -612,6 +666,22 @@ async function loadData(){
     obras.forEach(o=>{nObraId=Math.max(nObraId,o.id+1);o.pdfs.forEach(f=>{nPdfId=Math.max(nPdfId,f.id+1);});});
   }catch(_){obras=[];}
   try{const r=localStorage.getItem('obrapines_cats');if(r)customCats=JSON.parse(r);}catch(_){}
+  // Migración defensiva: convertir pines de formato viejo (id/foto) al nuevo (uid/num/fotoId)
+  let migrated=false;
+  for(const o of obras)for(const f of o.pdfs){
+    if(!f.pins)f.pins=[];
+    for(const p of f.pins){
+      if(p.uid===undefined){p.uid=uid('pin');migrated=true;}
+      if(p.num===undefined){p.num=(p.id!=null?p.id:0);migrated=true;}
+      // Foto vieja en base64 dentro del pin → moverla a IndexedDB
+      if(p.foto&&!p.fotoId){
+        const fid=uid('photo');await DB.putPhoto(fid,p.foto);photoMem[fid]=p.foto;
+        p.fotoId=fid;delete p.foto;migrated=true;
+      }
+    }
+    if(!f.nextNum)f.nextNum=Math.max(0,...f.pins.map(p=>p.num||0))+1;
+  }
+  if(migrated)persist();
   for(const o of obras)for(const f of o.pdfs){
     if(!docCache[f.id]){
       const ab=await DB.get(f.id);
@@ -635,7 +705,7 @@ let obras=[],nObraId=1,nPdfId=1;
 let actObra=null,actPdf=null,viewPage=1;
 const docCache={},pageCache={};
 let zl=1,tx=0,ty=0,fitW=0,fitH=0;
-let pinMode=false,pendXY=null,editPinId=null,relocatingPinId=null;
+let pinMode=false,pendXY=null,editPinUid=null,relocatingPinUid=null;
 let selCat='avance',formFoto=null,fotoFecha=null,selCol=PCOLS[0];
 let pvPins=[],pvIdx=0,pendingReloadPdf=null,pendingPdfAdd=null;
 let imgZl=1,imgTx=0,imgTy=0,imgPinch0=null,imgPan0=null;
@@ -680,7 +750,7 @@ function renderObrasList(){
     const d=document.createElement('div');d.className='card';
     d.innerHTML=`<div class="card-main">
       <div class="cdot" style="background:${o.color}"></div>
-      <div class="cinfo"><div class="cname">${o.name}</div><div class="cmeta">${o.pdfs.length} PDF · ${pins} evidencia${pins!==1?'s':''}</div></div>
+      <div class="cinfo"><div class="cname">${esc(o.name)}</div><div class="cmeta">${o.pdfs.length} PDF · ${pins} evidencia${pins!==1?'s':''}</div></div>
       <div class="carr">›</div></div>
     <div class="card-actions">
       <button class="cact-btn" onclick="editObra(event,'${o.id}')">✏️ Editar</button>
@@ -700,14 +770,16 @@ function editObra(ev,id){
 async function deleteObra(ev,id){
   ev.stopPropagation();const o=obras.find(x=>x.id==id);if(!o)return;
   const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
-  const fotos=o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0);
+  const fotos=o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.fotoId).length,0);
   let msg=`¿Eliminar la obra "${o.name}"?\n`;
   if(pins>0)msg+=`\nContiene ${o.pdfs.length} archivo${o.pdfs.length!==1?'s':''} con ${pins} evidencia${pins!==1?'s':''} y ${fotos} foto${fotos!==1?'s':''}.`;
   msg+='\n\nEsta acción no se puede deshacer.';
   const ok=await showConfirm('🗑️ Borrar Obra',msg,{ok:'Eliminar',danger:true});
   if(!ok)return;
   for(const f of o.pdfs){
-    for(let i=1;i<=(f.pageCount||1);i++){const k=`${f.id}_${i}`;if(pageCache[k]){URL.revokeObjectURL(pageCache[k].blobURL);delete pageCache[k];}}
+    {const prefix=`${f.id}_`;Object.keys(pageCache).forEach(k=>{if(k.startsWith(prefix)){URL.revokeObjectURL(pageCache[k]?.blobURL);delete pageCache[k];}});}
+    // Borrar fotos de cada pin de IndexedDB
+    for(const p of f.pins){if(p.fotoId){DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}}
     delete docCache[f.id];await DB.del(f.id);
   }
   obras=obras.filter(x=>x.id!=id);persist();renderObrasList();
@@ -732,7 +804,7 @@ function renderFilesList(){
     d.innerHTML=`<div class="card-main">
       <div class="cdot" style="background:${actObra.color}${noDoc?'44':''}"></div>
       <div class="cinfo">
-        <div class="cname" id="cname-${f.id}">${f.displayName||f.name.replace(/\.pdf$/i,'')}</div>
+        <div class="cname" id="cname-${f.id}">${esc(f.displayName||f.name.replace(/\.pdf$/i,''))}</div>
         <div class="cmeta">${noDoc?'⟳ Recargar · ':''}${f.pageCount||'?'} pág. · ${f.pins.length} evidencia${f.pins.length!==1?'s':''}</div>
       </div><div class="carr">›</div></div>
     <div class="card-actions">
@@ -769,7 +841,7 @@ async function duplicatePDF(ev,id){
   const proposed=proposeNextName(cur);
   const newName=await showPrompt('⎘ Duplicar plano','Nombre para la copia',proposed);
   if(!newName)return;
-  const copy={...f,id:nPdfId++,pins:[],nextPinId:1,displayName:newName};
+  const copy={...f,id:nPdfId++,pins:[],nextNum:1,displayName:newName};
   actObra.pdfs.push(copy);
   if(docCache[f.id])docCache[copy.id]=docCache[f.id];
   // Copiar también el PDF en IndexedDB para que la copia sea independiente
@@ -779,13 +851,16 @@ async function duplicatePDF(ev,id){
 
 async function deletePDF(ev,id){
   ev.stopPropagation();const f=actObra.pdfs.find(x=>x.id==id);if(!f)return;
-  const fotos=f.pins.filter(p=>p.foto).length;
+  const fotos=f.pins.filter(p=>p.fotoId).length;
   let msg=`¿Eliminar "${f.displayName||f.name.replace(/\.pdf$/i,'')}"?`;
   if(f.pins.length>0)msg+=`\n\nContiene ${f.pins.length} evidencia${f.pins.length!==1?'s':''}${fotos>0?` con ${fotos} foto${fotos!==1?'s':''}`:''}.`;
   msg+='\n\nEsta acción no se puede deshacer.';
   const ok=await showConfirm('🗑️ Borrar PDF',msg,{ok:'Eliminar',danger:true});
   if(!ok)return;
-  for(let i=1;i<=(f.pageCount||1);i++){const k=`${f.id}_${i}`;if(pageCache[k]){URL.revokeObjectURL(pageCache[k].blobURL);delete pageCache[k];}}
+  // Revocar TODOS los blobs cacheados de este PDF (clave f.id_*), no solo hasta pageCount
+  const prefix=`${f.id}_`;
+  Object.keys(pageCache).forEach(k=>{if(k.startsWith(prefix)){URL.revokeObjectURL(pageCache[k]?.blobURL);delete pageCache[k];}});
+  for(const p of f.pins){if(p.fotoId){DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}}
   delete docCache[f.id];await DB.del(f.id);
   actObra.pdfs=actObra.pdfs.filter(x=>x.id!=id);persist();renderFilesList();toast('PDF eliminado');
 }
@@ -801,7 +876,7 @@ async function addPDF(input){
     const doc=await pdfjsLib.getDocument({data:ab}).promise;
     const id=nPdfId++;docCache[id]=doc;
     DB.put(id,ab);
-    const pdf={id,name:file.name,pageCount:doc.numPages,pins:[],nextPinId:1};
+    const pdf={id,name:file.name,pageCount:doc.numPages,pins:[],nextNum:1};
     actObra.pdfs.push(pdf);persist();renderFilesList();
     if(doc.numPages>3){
       const est=Math.round(doc.numPages*7);
@@ -845,7 +920,7 @@ async function reloadPDF(input){
     DB.put(pendingReloadPdf.id,ab);
     const pdf=pendingReloadPdf;pendingReloadPdf=null;
     closeOv('m-reload');persist();await openViewerFor(pdf);
-  }catch(e){setLoading(null);await showAlert('Error',e.message);}
+  }catch(e){setLoading(null);await showAlert('No se pudo recargar el PDF',`${e.message||e}\n\nVerifica que sea un archivo PDF válido.`);}
   input.value='';
 }
 
@@ -861,11 +936,12 @@ function openViewerFor(pdf){
 async function loadPage(n){
   viewPage=n;setLoading(`Cargando página ${n}…`,5);
   try{const cached=await ensurePage(actPdf.id,n);await showPage(n,cached);}
-  catch(e){setLoading(null);await showAlert('Error',e.message);}
+  catch(e){setLoading(null);await showAlert('No se pudo mostrar la página',`Página ${n}: ${e.message||e}\n\nSi el plano es muy grande, prueba bajar la calidad.`);}
 }
 async function showPage(n,cached){
   if(!cached){const k=`${actPdf.id}_${n}`;cached=pageCache[k];}
   if(!cached)return;
+  cached.lastUsed=Date.now();
   const vpW=Q('vp').clientWidth;
   fitW=vpW;fitH=Math.round(fitW*cached.renderH/cached.renderW);
   Q('page-wrap').style.width=fitW+'px';Q('page-wrap').style.height=fitH+'px';
@@ -885,28 +961,54 @@ function updateFtr(){
 // ══════════════════════════════════════════════════════════════════════════
 // RENDER → JPEG cache → CSS transform
 // ══════════════════════════════════════════════════════════════════════════
+const MAX_CANVAS_PIXELS=16000000; // ~16MP, límite seguro para canvas en móvil
+const PAGE_CACHE_LIMIT=6;          // máximo de páginas renderizadas en memoria
+
+// LRU: si hay demasiadas páginas cacheadas, libera las menos usadas (revocando blobs)
+function evictPageCache(keepKeys){
+  const keys=Object.keys(pageCache);
+  if(keys.length<=PAGE_CACHE_LIMIT)return;
+  // Ordenar por último acceso (lastUsed); conservar las más recientes y las protegidas
+  const protect=new Set(keepKeys||[]);
+  const sorted=keys.filter(k=>!protect.has(k)).sort((a,b)=>(pageCache[a].lastUsed||0)-(pageCache[b].lastUsed||0));
+  while(Object.keys(pageCache).length>PAGE_CACHE_LIMIT && sorted.length){
+    const k=sorted.shift();
+    if(pageCache[k]){URL.revokeObjectURL(pageCache[k].blobURL);delete pageCache[k];}
+  }
+}
+
 async function ensurePage(pdfId,pageNum,highQ=false,silent=false){
   const key=`${pdfId}_${pageNum}`;
-  if(pageCache[key]&&!highQ)return pageCache[key];
+  if(pageCache[key]&&!highQ){pageCache[key].lastUsed=Date.now();return pageCache[key];}
+  // Si vamos a mejorar calidad, revocar el blob anterior para no fugar memoria
+  if(pageCache[key]&&highQ){URL.revokeObjectURL(pageCache[key].blobURL);delete pageCache[key];}
   const doc=docCache[pdfId];const page=await doc.getPage(pageNum);const nat=page.getViewport({scale:1});
   const vpW=Math.max(window.innerWidth,screen.width||0,screen.availWidth||0);
-  const TARGET_W=Math.min(highQ?5000:3500,vpW*(highQ?4:2.5));
-  const scale=TARGET_W/nat.width;const vp=page.getViewport({scale});
-  const canvas=document.createElement('canvas');canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);
+  let TARGET_W=Math.min(highQ?5000:3500,vpW*(highQ?4:2.5));
+  let scale=TARGET_W/nat.width;let vp=page.getViewport({scale});
+  let cw=Math.round(vp.width),ch=Math.round(vp.height);
+  // Límite de píxeles: si excede, reducir escala proporcionalmente (con margen de seguridad)
+  if(cw*ch>MAX_CANVAS_PIXELS){
+    const factor=Math.sqrt(MAX_CANVAS_PIXELS/(cw*ch))*0.999;
+    scale*=factor;vp=page.getViewport({scale});cw=Math.floor(vp.width);ch=Math.floor(vp.height);
+  }
+  const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
   const task=page.render({canvasContext:canvas.getContext('2d'),viewport:vp});
   if(!silent){task.onProgress=p=>{if(p.total)setLoading(`Procesando ${pageNum}/${actPdf?.pageCount||'?'}`,p.loaded/p.total*88);};}
   await task.promise;
   if(!silent)setLoading('Generando imagen…',96);
   const blobURL=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(URL.createObjectURL(b)):rej('blob fail'),'image/jpeg',0.95));
-  pageCache[key]={blobURL,renderW:canvas.width,renderH:canvas.height,natW:nat.width,natH:nat.height,quality:highQ?'high':'standard'};
+  pageCache[key]={blobURL,renderW:canvas.width,renderH:canvas.height,natW:nat.width,natH:nat.height,quality:highQ?'high':'standard',lastUsed:Date.now()};
+  // Liberar páginas viejas, protegiendo la actual y vecinas
+  evictPageCache([key,`${pdfId}_${pageNum-1}`,`${pdfId}_${pageNum+1}`]);
   return pageCache[key];
 }
 
 async function improveQuality(){
   if(!actPdf)return;
   Q('qual-badge').classList.remove('on');
-  try{setLoading('Mejorando resolución al 4×…',10);await ensurePage(actPdf.id,viewPage,true);await showPage(viewPage);toast('✓ Calidad mejorada');}
-  catch(e){await showAlert('Error',e.message);}
+  try{setLoading('Mejorando resolución…',10);await ensurePage(actPdf.id,viewPage,true);await showPage(viewPage);toast('✓ Calidad mejorada');}
+  catch(e){await showAlert('No se pudo mejorar la calidad',`${e.message||e}\n\nEl plano puede ser demasiado grande para alta resolución en este dispositivo.`);}
   setLoading(null);
 }
 
@@ -942,7 +1044,7 @@ vpEl.addEventListener('touchstart',e=>{
 
 vpEl.addEventListener('touchmove',e=>{
   e.preventDefault();
-  if(pan0&&e.touches.length===1&&!pinMode&&!relocatingPinId){
+  if(pan0&&e.touches.length===1&&!pinMode&&!relocatingPinUid){
     const t=e.touches[0],dx=t.clientX-pan0.x,dy=t.clientY-pan0.y;
     if(Math.hypot(dx,dy)>5)moved=true;
     tx=pan0.tx0+dx;ty=pan0.ty0+dy;applyTx();
@@ -969,11 +1071,11 @@ vpEl.addEventListener('touchend',e=>{
 
 vpEl.addEventListener('click',e=>{
   if(moved)return;
-  if(relocatingPinId!==null){
+  if(relocatingPinUid!==null){
     const r=Q('ct').getBoundingClientRect();
     const xPct=(e.clientX-r.left)/r.width,yPct=(e.clientY-r.top)/r.height;
     if(xPct>=0&&xPct<=1&&yPct>=0&&yPct<=1){
-      actPdf.pins=actPdf.pins.map(p=>p.id!==relocatingPinId?p:{...p,xPct,yPct});
+      actPdf.pins=actPdf.pins.map(p=>p.uid!==relocatingPinUid?p:{...p,xPct,yPct});
       cancelRelocate();drawPins();persist();toast('✓ Pin movido');
     }return;
   }
@@ -993,7 +1095,7 @@ vpEl.addEventListener('wheel',e=>{
 },{passive:false});
 
 let mousePan=null;
-vpEl.addEventListener('mousedown',e=>{if(e.button!==0||pinMode||relocatingPinId)return;mousePan={x:e.clientX,y:e.clientY,tx0:tx,ty0:ty};vpEl.classList.add('panning');e.preventDefault();});
+vpEl.addEventListener('mousedown',e=>{if(e.button!==0||pinMode||relocatingPinUid)return;mousePan={x:e.clientX,y:e.clientY,tx0:tx,ty0:ty};vpEl.classList.add('panning');e.preventDefault();});
 window.addEventListener('mousemove',e=>{if(!mousePan)return;tx=mousePan.tx0+(e.clientX-mousePan.x);ty=mousePan.ty0+(e.clientY-mousePan.y);applyTx();});
 window.addEventListener('mouseup',()=>{mousePan=null;vpEl.classList.remove('panning');});
 
@@ -1029,8 +1131,8 @@ window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setT
 // ══════════════════════════════════════════════════════════════════════════
 function setPinMode(on){pinMode=on;Q('pin-fab').classList.toggle('on',on);Q('pill').classList.toggle('on',on);Q('pins-lyr').classList.toggle('pm',on);Q('vp').classList.toggle('pinmode',on);}
 function togglePinMode(){setPinMode(!pinMode);}
-function startRelocate(pinId){relocatingPinId=pinId;setPinMode(false);Q('relocate-pill').classList.add('on');Q('vp').classList.add('relocating');}
-function cancelRelocate(){relocatingPinId=null;Q('relocate-pill').classList.remove('on');Q('vp').classList.remove('relocating');}
+function startRelocate(pinId){relocatingPinUid=pinId;setPinMode(false);Q('relocate-pill').classList.add('on');Q('vp').classList.add('relocating');}
+function cancelRelocate(){relocatingPinUid=null;Q('relocate-pill').classList.remove('on');Q('vp').classList.remove('relocating');}
 
 // ══════════════════════════════════════════════════════════════════════════
 // DRAW PINS
@@ -1040,13 +1142,13 @@ function drawPins(){
   Q('ev-badge').textContent=actPdf.pins.length;
   actPdf.pins.filter(p=>p.page===viewPage).forEach(p=>{
     const c=cat(p.cat);
-    const anc=document.createElement('div');anc.className='pin-anc';anc.style.cssText=`left:${p.xPct*100}%;top:${p.yPct*100}%;`;anc.dataset.id=p.id;
+    const anc=document.createElement('div');anc.className='pin-anc';anc.style.cssText=`left:${p.xPct*100}%;top:${p.yPct*100}%;`;anc.dataset.uid=p.uid;
     const wrap=document.createElement('div');wrap.className='pin-wrap';
     const img=document.createElement('img');img.src=makePinSVG(c.color);img.width=20;img.height=28;
-    const lbl=document.createElement('div');lbl.className='pin-lbl';lbl.textContent=p.id;lbl.style.borderColor=c.color+'55';
+    const lbl=document.createElement('div');lbl.className='pin-lbl';lbl.textContent=p.num;lbl.style.borderColor=c.color+'55';
     wrap.appendChild(img);wrap.appendChild(lbl);anc.appendChild(wrap);
-    wrap.addEventListener('click',ev=>{ev.stopPropagation();if(!moved)openPV(p.id);});
-    wrap.addEventListener('touchend',ev=>{ev.stopPropagation();ev.preventDefault();if(!moved)openPV(p.id);},{passive:false});
+    wrap.addEventListener('click',ev=>{ev.stopPropagation();if(!moved)openPV(p.uid);});
+    wrap.addEventListener('touchend',ev=>{ev.stopPropagation();ev.preventDefault();if(!moved)openPV(p.uid);},{passive:false});
     pl.appendChild(anc);
   });
 }
@@ -1054,20 +1156,26 @@ function drawPins(){
 // ══════════════════════════════════════════════════════════════════════════
 // PIN VIEWER
 // ══════════════════════════════════════════════════════════════════════════
-function openPV(pinId){pvPins=actPdf.pins;pvIdx=Math.max(0,pvPins.findIndex(p=>p.id===pinId));resetImgZoom();showPVSlide(pvIdx);pushNav();Q('pv').classList.add('on');}
+function openPV(pinUid){pvPins=actPdf.pins;pvIdx=Math.max(0,pvPins.findIndex(p=>p.uid===pinUid));resetImgZoom();showPVSlide(pvIdx);pushNav();Q('pv').classList.add('on');
+  // Precargar fotos del pin actual y vecinos (rendimiento al navegar)
+  [pvIdx-1,pvIdx+1].forEach(i=>{const p=pvPins[i];if(p&&p.fotoId)loadPhoto(p.fotoId).catch(()=>{});});
+}
 function _closePV(){Q('pv').classList.remove('on');resetImgZoom();}
 function closePV(){_closePV();}
-function showPVSlide(idx){
+async function showPVSlide(idx){
   pvIdx=idx;const p=pvPins[idx];const c=cat(p.cat);
-  Q('pv-icon').textContent=c.icon;Q('pv-label').textContent=`${c.label} · #${p.id}`;
+  Q('pv-icon').textContent=c.icon;Q('pv-label').textContent=`${c.label} · #${p.num}`;
   Q('pv-cnt').textContent=pvPins.length>1?`${idx+1}/${pvPins.length}`:'';
   const img=Q('pv-img'),noph=Q('pv-noph');
-  if(p.foto){
+  const fotoData=p.fotoId?await loadPhoto(p.fotoId):null;
+  // Verificar que el usuario no haya cambiado de slide mientras cargaba la foto
+  if(pvIdx!==idx)return;
+  if(fotoData){
     img.style.display='block';noph.style.display='none';img.style.opacity='0';img.style.transition='';
     img.onerror=()=>{img.style.display='none';noph.style.display='flex';};
     img.onload=()=>{img.style.transition='opacity .18s';img.style.opacity='1';};
-    img.src='';requestAnimationFrame(()=>{img.src=p.foto;});
-  }else{img.style.display='none';noph.style.display='flex';Q('pv-noph-ico').textContent=c.icon;Q('pv-noph-num').textContent=`#${p.id}`;Q('pv-noph').style.background=`linear-gradient(135deg,${c.color}22,${c.color}08)`;}
+    img.src='';requestAnimationFrame(()=>{img.src=fotoData;});
+  }else{img.style.display='none';noph.style.display='flex';Q('pv-noph-ico').textContent=c.icon;Q('pv-noph-num').textContent=`#${p.num}`;Q('pv-noph').style.background=`linear-gradient(135deg,${c.color}22,${c.color}08)`;}
   Q('pv-prev').classList.toggle('hidden',idx===0);Q('pv-next').classList.toggle('hidden',idx===pvPins.length-1);
   const nEl=Q('pv-nota');nEl.textContent=p.nota||'Sin nota';nEl.className=p.nota?'':'vacia';
   Q('pv-nota-card').style.setProperty('--cc',c.color);
@@ -1078,8 +1186,8 @@ function showPVSlide(idx){
   const dots=Q('pv-dots');dots.innerHTML='';
   if(pvPins.length>1&&pvPins.length<=12)pvPins.forEach((_,i)=>{const d=document.createElement('div');d.className='pvdot'+(i===idx?' on':'');dots.appendChild(d);});
 }
-function pvMove(dir){const ni=pvIdx+dir;if(ni>=0&&ni<pvPins.length){resetImgZoom();showPVSlide(ni);}}
-function pvRelocate(){const p=pvPins[pvIdx];if(!p)return;_closePV();startRelocate(p.id);}
+function pvMove(dir){const ni=pvIdx+dir;if(ni>=0&&ni<pvPins.length){resetImgZoom();showPVSlide(ni);const nx=pvPins[ni+dir];if(nx&&nx.fotoId)loadPhoto(nx.fotoId).catch(()=>{});}}
+function pvRelocate(){const p=pvPins[pvIdx];if(!p)return;_closePV();startRelocate(p.uid);}
 function pvReplacePhoto(){Q('fi-replace').click();}
 async function doReplacePhoto(input){
   const f=input.files[0];if(!f)return;
@@ -1089,45 +1197,48 @@ async function doReplacePhoto(input){
   if(isHeic&&typeof heic2any!=='undefined'){
     setLoading('Convirtiendo imagen HEIC…',50);
     try{const blob=await heic2any({blob:f,toType:'image/jpeg',quality:0.92});fileToProcess=Array.isArray(blob)?blob[0]:blob;}
-    catch(e){console.warn('heic2any',e);}
+    catch(e){console.warn('heic2any',e);toast('⚠️ No se pudo convertir HEIC');}
     setLoading(null);
   }
   const r=new FileReader();
+  r.onerror=()=>toast('⚠️ No se pudo leer la imagen');
   r.onload=async()=>{
     const comp=await compressImage(r.result);
+    if(!comp||comp.length<100){toast('⚠️ Imagen inválida');return;}
     const p=pvPins[pvIdx];if(!p)return;
-    actPdf.pins=actPdf.pins.map(x=>x.id!==p.id?x:{...x,foto:comp});
+    // Borrar foto anterior de IndexedDB y guardar la nueva
+    if(p.fotoId){await DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}
+    const fid=uid('photo');await DB.putPhoto(fid,comp);photoMem[fid]=comp;
+    p.fotoId=fid;
+    pvPins=actPdf.pins; // asegurar referencia fresca (#bug visor)
     persist();showPVSlide(pvIdx);toast('✓ Foto actualizada');
-    // Guardar la nueva foto en la carpeta del teléfono también
-    FOLDER.savePhoto(comp, actObra?.name||'OBRA', actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', p.id);
+    FOLDER.savePhoto(comp, actObra?.name||'OBRA', actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', p.num);
   };
   r.readAsDataURL(fileToProcess);
 }
-function pvEdit(){
+async function pvEdit(){
   const p=pvPins[pvIdx];if(!p)return;_closePV();
-  editPinId=p.id;pendXY=null;selCat=p.cat;formFoto=p.foto||null;fotoFecha=p.fotoFecha||null;
-  Q('m-pin-ttl').textContent=`✏️ Editar Evidencia #${p.id}`;
+  editPinUid=p.uid;pendXY=null;selCat=p.cat;formFoto=null;fotoFecha=p.fotoFecha||null;
+  Q('m-pin-ttl').textContent=`✏️ Editar Evidencia #${p.num}`;
   Q('pin-nota').value=p.nota||'';Q('pin-resp').value=p.resp||'';Q('pin-sender').value=p.sender||'';
   Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
   Q('pin-date').value='';Q('pin-time').value='';
-  if(p.foto){Q('fprev').src=p.foto;Q('fwrap').style.display='block';}else Q('fwrap').style.display='none';
+  const fotoData=p.fotoId?await loadPhoto(p.fotoId):null;
+  if(fotoData){Q('fprev').src=fotoData;Q('fwrap').style.display='block';formFoto=null;}else Q('fwrap').style.display='none';
   buildCatGrid();pushNav();openOv('m-pin');
 }
 async function pvDelete(){
   const p=pvPins[pvIdx];if(!p)return;
   const ok=await showConfirm('🗑️ Eliminar evidencia',
-    `¿Eliminar evidencia #${p.id}${p.nota?' "'+p.nota.slice(0,40)+'"':''}?\n\nSolo se renumerarán los pines de la categoría "${cat(p.cat).label}".`,
+    `¿Eliminar evidencia #${p.num}${p.nota?' "'+p.nota.slice(0,40)+'"':''}?\n\nLos números de las demás evidencias NO cambian.`,
     {ok:'Eliminar',danger:true});
   if(!ok)return;
-  const deletedId=p.id, deletedCat=p.cat;
-  actPdf.pins=actPdf.pins.filter(x=>x.id!==deletedId);
-  actPdf.pins=actPdf.pins.map(pin=>{
-    if(pin.cat===deletedCat && pin.id>deletedId) return{...pin,id:pin.id-1};
-    return pin;
-  });
-  actPdf.nextPinId=Math.max(0,...actPdf.pins.map(x=>x.id))+1;
+  // Borrar la foto asociada de IndexedDB
+  if(p.fotoId){await DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}
+  // Eliminar SOLO este pin por su uid. NO se renumera nada (bug #1 corregido).
+  actPdf.pins=actPdf.pins.filter(x=>x.uid!==p.uid);
   _closePV();drawPins();renderList();renderFilesList();persist();
-  toast(`✓ Pin eliminado. Categoría renumerada.`);
+  toast(`✓ Evidencia eliminada.`);
 }
 async function locatePin(){
   const p=pvPins[pvIdx];if(!p)return;_closePV();
@@ -1135,9 +1246,9 @@ async function locatePin(){
   if(zl<2){zl=2;tx=0;ty=0;}
   const vW=Q('vp').clientWidth,vH=Q('vp').clientHeight;
   tx=vW/2-(p.xPct*fitW*zl);ty=vH/2-(p.yPct*fitH*zl);applyTx();drawPins();
-  setTimeout(()=>blinkPin(p.id),200);
+  setTimeout(()=>blinkPin(p.uid),200);
 }
-function blinkPin(id){const el=Q('pins-lyr').querySelector(`[data-id="${id}"] .pin-wrap`);if(!el)return;el.classList.add('blinking');setTimeout(()=>el.classList.remove('blinking'),2500);}
+function blinkPin(pinUid){const el=Q('pins-lyr').querySelector(`[data-uid="${pinUid}"] .pin-wrap`);if(!el)return;el.classList.add('blinking');setTimeout(()=>el.classList.remove('blinking'),2500);}
 
 let pvSwX=null,pvSwY=null;
 Q('pv').addEventListener('touchstart',e=>{pvSwX=e.touches[0].clientX;pvSwY=e.touches[0].clientY;},{passive:true});
@@ -1198,21 +1309,21 @@ window.addEventListener('mouseup',e=>{
 });
 
 // LIGHTBOX
-function previewFoto(){if(!formFoto)return;Q('lb-img').src=formFoto;pushNav();Q('lightbox').classList.add('on');}
+function previewFoto(){const src=formFoto||Q('fprev').src;if(!src)return;Q('lb-img').src=src;pushNav();Q('lightbox').classList.add('on');}
 function closeLightbox(){Q('lightbox').classList.remove('on');Q('lb-img').src='';}
 
 // ══════════════════════════════════════════════════════════════════════════
 // PIN FORM
 // ══════════════════════════════════════════════════════════════════════════
 function openPinForm(xy){
-  pendXY=xy;editPinId=null;selCat=allCats()[0]?.id||'avance';formFoto=null;fotoFecha=null;
-  Q('m-pin-ttl').textContent=`📍 Nueva Evidencia #${actPdf?.nextPinId||1}`;
+  pendXY=xy;editPinUid=null;selCat=allCats()[0]?.id||'avance';formFoto=null;fotoFecha=null;
+  Q('m-pin-ttl').textContent=`📍 Nueva Evidencia #${actPdf?.nextNum||1}`;
   Q('pin-nota').value='';Q('pin-resp').value='';Q('pin-sender').value='';
   Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
   Q('pin-date').value='';Q('pin-time').value='';
   Q('fwrap').style.display='none';buildCatGrid();pushNav();openOv('m-pin');
 }
-function _closePinModal(){pendXY=null;editPinId=null;closeOv('m-pin');}
+function _closePinModal(){pendXY=null;editPinUid=null;closeOv('m-pin');}
 function closePinModal(){_closePinModal();}
 
 function buildCatGrid(){
@@ -1263,33 +1374,64 @@ async function pickFoto(input, source){
   r.readAsDataURL(fileToProcess);
 }
 
-function savePin(){
-  const nota=Q('pin-nota').value;const resp=Q('pin-resp').value.trim();
-  const sender=Q('pin-sender').value.trim();
-  const dateVal=Q('pin-date').value;const timeVal=Q('pin-time').value;
-  let fecha;
-  const dateBlockVisible=Q('pin-date-block').style.display!=='none';
-  if(dateBlockVisible&&dateVal){
-    const d=new Date(dateVal+'T00:00:00');
-    fecha=d.toLocaleDateString('es-MX',{dateStyle:'short'})+(timeVal?' '+timeVal:'');
-  }else{fecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}
-  const wasEditing=editPinId;
-  let targetPinId=null;
-  if(editPinId!==null){
-    actPdf.pins=actPdf.pins.map(p=>p.id!==editPinId?p:{...p,cat:selCat,nota,resp,sender,foto:formFoto!==null?formFoto:p.foto,fotoFecha:fotoFecha!==null?fotoFecha:p.fotoFecha,fecha});
-    targetPinId=editPinId;
-  }else if(pendXY){
-    if(!actPdf.nextPinId)actPdf.nextPinId=Math.max(0,...actPdf.pins.map(p=>p.id||0))+1;
-    targetPinId=actPdf.nextPinId++;
-    actPdf.pins.push({id:targetPinId,page:viewPage,xPct:pendXY.xPct,yPct:pendXY.yPct,cat:selCat,nota,resp,sender,foto:formFoto,fotoFecha,fecha});
+async function savePin(){
+  try{
+    const nota=Q('pin-nota').value;const resp=Q('pin-resp').value.trim();
+    const sender=Q('pin-sender').value.trim();
+    const dateVal=Q('pin-date').value;const timeVal=Q('pin-time').value;
+    let fecha;
+    const dateBlockVisible=Q('pin-date-block').style.display!=='none';
+    if(dateBlockVisible&&dateVal){
+      const d=new Date(dateVal+'T00:00:00');
+      fecha=d.toLocaleDateString('es-MX',{dateStyle:'short'})+(timeVal?' '+timeVal:'');
+    }else{fecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}
+    const wasEditingUid=editPinUid;
+
+    // Validar que haya dónde poner el pin
+    if(editPinUid===null && !pendXY){toast('⚠️ Toca el plano para ubicar el pin');return;}
+
+    // Guardar la foto (si hay nueva) en IndexedDB → devuelve fotoId
+    let newFotoId=undefined; // undefined = no tocar; null = quitar; string = nueva
+    if(formFoto!==null){
+      const fid=uid('photo');
+      const okPhoto=await DB.putPhoto(fid,formFoto);
+      if(okPhoto){photoMem[fid]=formFoto;newFotoId=fid;}
+      else{toast('⚠️ No se pudo guardar la foto, pero el pin sí se guarda');}
+    }
+
+    let targetPin=null;
+    if(editPinUid!==null){
+      const p=actPdf.pins.find(x=>x.uid===editPinUid);
+      if(p){
+        if(newFotoId!==undefined && newFotoId && p.fotoId && p.fotoId!==newFotoId){DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}
+        p.cat=selCat;p.nota=nota;p.resp=resp;p.sender=sender;p.fecha=fecha;
+        if(newFotoId!==undefined && newFotoId)p.fotoId=newFotoId;
+        if(fotoFecha!==null)p.fotoFecha=fotoFecha;
+        targetPin=p;
+      }
+    }else if(pendXY){
+      if(!actPdf.nextNum)actPdf.nextNum=Math.max(0,...actPdf.pins.map(p=>p.num||0))+1;
+      targetPin={
+        uid:uid('pin'),               // ID interno, NUNCA cambia
+        num:actPdf.nextNum++,         // número visual global
+        page:viewPage,xPct:pendXY.xPct,yPct:pendXY.yPct,
+        cat:selCat,nota,resp,sender,
+        fotoId:newFotoId||null,fotoFecha,fecha
+      };
+      actPdf.pins.push(targetPin);
+    }
+    _closePinModal();drawPins();renderList();renderFilesList();persist();
+    // ── Exportar foto a la carpeta del teléfono (solo pin NUEVO con foto) ──
+    if(wasEditingUid===null && formFoto && targetPin){
+      FOLDER.savePhoto(formFoto, actObra?.name||'OBRA',
+        actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', targetPin.num);
+    }
+    if(wasEditingUid!==null && targetPin)openPV(targetPin.uid);
+  }catch(e){
+    console.error('savePin',e);
+    setLoading(null);
+    await showAlert('No se pudo guardar',`Ocurrió un problema al guardar la evidencia:\n${e.message||e}\n\nIntenta de nuevo. Si persiste, toma captura de pantalla.`);
   }
-  _closePinModal();drawPins();renderList();renderFilesList();persist();
-  // ── Exportar foto a la carpeta del teléfono (solo pin NUEVO con foto) ──
-  if(wasEditing===null && formFoto && targetPinId!=null){
-    FOLDER.savePhoto(formFoto, actObra?.name||'OBRA',
-      actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', targetPinId);
-  }
-  if(wasEditing!==null)openPV(wasEditing);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -1303,15 +1445,17 @@ function renderList(){
   if(!actPdf.pins.length){sc.innerHTML='<div class="lempty">Activa 📍 y toca el plano.</div>';return;}
   allCats().forEach(c=>{
     const pins=actPdf.pins.filter(p=>p.cat===c.id);if(!pins.length)return;
-    const hdr=document.createElement('div');hdr.className='lcat-hdr';hdr.innerHTML=`<span>${c.icon}</span><span style="color:${c.color}">${c.label}</span><span style="color:#30363d;font-size:9px;margin-left:2px;">(${pins.length})</span>`;sc.appendChild(hdr);
+    const hdr=document.createElement('div');hdr.className='lcat-hdr';hdr.innerHTML=`<span>${esc(c.icon)}</span><span style="color:${esc(c.color)}">${esc(c.label)}</span><span style="color:#30363d;font-size:9px;margin-left:2px;">(${pins.length})</span>`;sc.appendChild(hdr);
     pins.forEach(p=>{
       const d=document.createElement('div');d.className='litem';
-      d.innerHTML=`<div class="lbdg" style="background:${c.color}">${p.id}</div>
-        <div style="flex:1;min-width:0"><div class="llbl">${p.nota||'Sin nota'}</div>
-        <div class="lmeta">Pág. ${p.page} · ${p.fecha}${p.fotoFecha?' · 📷':''}${p.resp?' · 👷 '+p.resp:''}</div></div>
-        ${p.foto?`<img class="lthumb" src="${p.foto}" onerror="this.remove()" alt=""/>`:''}`;
-      d.onclick=()=>{closeList();if(p.page!==viewPage)loadPage(p.page).then(()=>openPV(p.id));else openPV(p.id);};
+      d.innerHTML=`<div class="lbdg" style="background:${esc(c.color)}">${esc(p.num)}</div>
+        <div style="flex:1;min-width:0"><div class="llbl">${esc(p.nota||'Sin nota')}</div>
+        <div class="lmeta">Pág. ${esc(p.page)} · ${esc(p.fecha)}${p.fotoFecha?' · 📷':''}${p.resp?' · 👷 '+esc(p.resp):''}</div></div>
+        ${p.fotoId?`<img class="lthumb" data-fid="${esc(p.fotoId)}" alt=""/>`:''}`;
+      d.onclick=()=>{closeList();if(p.page!==viewPage)loadPage(p.page).then(()=>openPV(p.uid));else openPV(p.uid);};
       sc.appendChild(d);
+      // Cargar miniatura async desde IndexedDB
+      if(p.fotoId){loadPhoto(p.fotoId).then(data=>{const im=d.querySelector('.lthumb');if(im){if(data)im.src=data;else im.remove();}});}
     });
   });
 }
@@ -1350,6 +1494,9 @@ function openReportModal(){
 
 async function generateReport(){
   if(!actPdf||!actObra)return;saveRepPrefs();closeOv('m-report');
+  // #6: abrir la ventana YA (al click), antes de cualquier await, para que no la bloqueen
+  const repWin=window.open('','_blank');
+  if(repWin){repWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando reporte…</title><style>body{font-family:Arial,sans-serif;background:#0d1117;color:#22d3a8;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:16px;font-weight:bold;}</style></head><body>⏳ Generando reporte fotográfico…</body></html>');}
   toast('Preparando reporte…',8000);
 
   const title   = Q('rep-title').value    || 'Reporte Fotográfico';
@@ -1361,17 +1508,23 @@ async function generateReport(){
   const pins    = actPdf.pins.filter(p=>!repCatFilter.includes(p.cat));
   const pdfName = actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'');
   const genDate = new Date().toLocaleDateString('es-MX',{dateStyle:'long'});
-  const total   = pins.length, conFoto=pins.filter(p=>p.foto).length;
+  const total   = pins.length, conFoto=pins.filter(p=>p.fotoId).length;
 
   const neededPages=new Set(pins.map(p=>p.page));let pi=0;
   for(const pg of neededPages){pi++;const k=`${actPdf.id}_${pg}`;
     if(!pageCache[k]){setLoading(`Preparando plano pág. ${pg}/${actPdf.pageCount||'?'}…`,Math.round(pi/neededPages.size*60));try{await ensurePage(actPdf.id,pg,false,true);}catch(_){}}}
+
+  // Pre-cargar todas las fotos del reporte desde IndexedDB (un mapa fotoId→dataURL)
+  setLoading('Cargando fotos…',70);
+  const fotoMap={};
+  await Promise.all(pins.filter(p=>p.fotoId).map(async p=>{const d=await loadPhoto(p.fotoId);if(d)fotoMap[p.fotoId]=d;}));
+  const getFoto=p=>p.fotoId?fotoMap[p.fotoId]:null;
   setLoading(null);
 
   function imgDim(src){return new Promise(res=>{if(!src)return res({w:4,h:3});const i=new Image();i.onload=()=>res({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>res({w:4,h:3});i.src=src;});}
   const dims={};
-  await Promise.all(pins.filter(p=>p.foto).map(async p=>{dims[p.id]=await imgDim(p.foto);}));
-  const isPort=id=>dims[id]&&dims[id].h>dims[id].w;
+  await Promise.all(pins.filter(p=>getFoto(p)).map(async p=>{dims[p.uid]=await imgDim(getFoto(p));}));
+  const isPort=uid=>dims[uid]&&dims[uid].h>dims[uid].w;
 
   function cg(pins,t){const u=new Array(pins.length).fill(false);const r=[];for(let i=0;i<pins.length;i++){if(u[i])continue;const g=[pins[i]];u[i]=true;for(let j=i+1;j<pins.length;j++){if(!u[j]&&Math.hypot(pins[i].xPct-pins[j].xPct,pins[i].yPct-pins[j].yPct)<t){g.push(pins[j]);u[j]=true;}}r.push(g);}return r;}
   function sc(pins){if(pins.length<=8)return cg(pins,.03);let lo=.02,hi=.35;for(let k=0;k<12;k++){const m=(lo+hi)/2;if(cg(pins,m).length>9)lo=m;else hi=m;}return cg(pins,hi);}
@@ -1400,11 +1553,11 @@ async function generateReport(){
   for(const c of allCats()){
     const catPins=pins.filter(p=>p.cat===c.id);if(!catPins.length)continue;
     const numbered=catPins.map((p,i)=>({...p,catNum:i+1}));
-    const wf=numbered.filter(p=>p.foto);
+    const wf=numbered.filter(p=>getFoto(p));
     let i=0;
     while(i<wf.length){
       const p0=wf[i],p1=wf[i+1],p2=wf[i+2];
-      const trio=p0&&p1&&p2&&isPort(p0.id)&&isPort(p1.id)&&isPort(p2.id);
+      const trio=p0&&p1&&p2&&isPort(p0.uid)&&isPort(p1.uid)&&isPort(p2.uid);
       if(trio){allBatches.push({c,batch:[p0,p1,p2]});i+=3;}
       else{allBatches.push({c,batch:p1?[p0,p1]:[p0]});i+=2;}
     }
@@ -1416,7 +1569,7 @@ async function generateReport(){
       prevCatId=c.id;const ct=pins.filter(p=>p.cat===c.id).length;
       sectionsHtml+=`<div style="display:flex;align-items:center;gap:7px;margin:${rowCount>0?'14px':'0'} 0 7px;">
         <span style="font-size:11px;">${c.icon}</span>
-        <span style="font-size:10px;font-weight:800;color:${c.color};">${c.label}</span>
+        <span style="font-size:10px;font-weight:800;color:${c.color};">${esc(c.label)}</span>
         <span style="font-size:9px;color:#9ca3af;">${ct} evidencia${ct!==1?'s':''}</span>
         <div style="flex:1;height:1px;background:${c.color}44;"></div>
       </div>`;
@@ -1431,16 +1584,17 @@ async function generateReport(){
     const photoH=planH;
 
     const photoCols=batch.map(p=>{
-      if(!p.foto)return'';
-      const meta=[p.fecha,p.fotoFecha?'📷 '+p.fotoFecha:null,p.resp?'👷 '+p.resp:null,p.sender?'💬 '+p.sender:null].filter(Boolean).join(' · ');
+      const fimg=getFoto(p);
+      if(!fimg)return'';
+      const meta=[p.fecha,p.fotoFecha?'📷 '+p.fotoFecha:null,p.resp?'👷 '+p.resp:null,p.sender?'💬 '+p.sender:null].filter(Boolean).map(esc).join(' · ');
       return`<div style="flex:1;min-width:0;">
-        <img src="${p.foto}" style="width:100%;height:${photoH}px;object-fit:cover;border-radius:5px;display:block;background:#f3f4f6;border:1px solid #e5e7eb;"/>
+        <img src="${fimg}" style="width:100%;height:${photoH}px;object-fit:cover;border-radius:5px;display:block;background:#f3f4f6;border:1px solid #e5e7eb;"/>
         <div style="padding:4px 2px 0;">
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
             <span style="background:${c.color};color:#fff;font-weight:800;font-size:9px;padding:1px 7px;border-radius:20px;white-space:nowrap;">${c.icon} ${p.catNum}</span>
             <span style="font-size:8px;color:#6b7280;line-height:1.3;">${meta}</span>
           </div>
-          <p style="font-size:10px;line-height:1.4;color:#374151;margin:0;">${(p.nota||'').slice(0,120)||'<em style="color:#9ca3af">Sin nota</em>'}</p>
+          <p style="font-size:10px;line-height:1.4;color:#374151;margin:0;">${esc((p.nota||'').slice(0,120))||'<em style="color:#9ca3af">Sin nota</em>'}</p>
         </div>
       </div>`;
     }).filter(Boolean).join('');
@@ -1458,19 +1612,19 @@ async function generateReport(){
 
   const hdr=`<div class="rpt-hdr">
     <div class="rpt-hl">
-      <div style="font-size:18px;font-weight:800;color:#0d1117;line-height:1.1;margin-bottom:3px;">${title}</div>
+      <div style="font-size:18px;font-weight:800;color:#0d1117;line-height:1.1;margin-bottom:3px;">${esc(title)}</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:9px;color:#6b7280;">
-        ${obra  ?`<span><b style="color:#374151;">Obra:</b> ${obra}</span>`:''}
-        ${semana?`<span><b style="color:#374151;">Semana:</b> ${semana}</span>`:''}
-        ${ubic  ?`<span><b style="color:#374151;">Ubic.:</b> ${ubic}</span>`:''}
-        <span><b style="color:#374151;">Plano:</b> ${pdfName}</span>
+        ${obra  ?`<span><b style="color:#374151;">Obra:</b> ${esc(obra)}</span>`:''}
+        ${semana?`<span><b style="color:#374151;">Semana:</b> ${esc(semana)}</span>`:''}
+        ${ubic  ?`<span><b style="color:#374151;">Ubic.:</b> ${esc(ubic)}</span>`:''}
+        <span><b style="color:#374151;">Plano:</b> ${esc(pdfName)}</span>
         <span><b style="color:#374151;">${total}</b> ev. · <b style="color:#374151;">${conFoto}</b> con foto</span>
       </div>
     </div>
     <div class="rpt-hr">
-      <div style="font-size:12px;font-weight:800;color:#0d1117;">${empresa}</div>
-      <div style="font-size:9px;color:#6b7280;">${elaboro}</div>
-      <div style="font-size:8px;color:#9ca3af;margin-top:1px;">${genDate}</div>
+      <div style="font-size:12px;font-weight:800;color:#0d1117;">${esc(empresa)}</div>
+      <div style="font-size:9px;color:#6b7280;">${esc(elaboro)}</div>
+      <div style="font-size:8px;color:#9ca3af;margin-top:1px;">${esc(genDate)}</div>
     </div>
   </div>`;
 
@@ -1504,13 +1658,12 @@ footer{font-size:8px;color:#9ca3af;display:flex;justify-content:space-between;pa
 ${hdr}
 <div class="rpt-body">
 ${sectionsHtml}
-<footer><span>${empresa} · ${elaboro}</span><span>${title} · ${genDate}</span></footer>
+<footer><span>${esc(empresa)} · ${esc(elaboro)}</span><span>${esc(title)} · ${esc(genDate)}</span></footer>
 </div>
 </div>
 </body></html>`;
 
-  const w=window.open('','_blank');
-  if(w){w.document.write(html);w.document.close();}
+  if(repWin){repWin.document.open();repWin.document.write(html);repWin.document.close();}
   else toast('Permite popups para generar el reporte');
 }
 
@@ -1598,6 +1751,12 @@ const SYNC={
         const ab=await DB.get(f.id);
         if(ab)pdfBlobs[f.id]=this.abToB64(ab);
       }
+      setLoading('Empaquetando fotos…',75);
+      // Recolectar fotos desde IndexedDB (mapa fotoId→dataURL)
+      const photoBlobs={};
+      for(const o of srcObras)for(const f of o.pdfs)for(const p of f.pins){
+        if(p.fotoId&&!photoBlobs[p.fotoId]){const d=await DB.getPhoto(p.fotoId);if(d)photoBlobs[p.fotoId]=d;}
+      }
       setLoading('Generando archivo…',85);
       const pkg={
         app:'ObraPines',
@@ -1609,7 +1768,8 @@ const SYNC={
         obras:srcObras,
         customCats:customCats,
         repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
-        pdfBlobs:pdfBlobs
+        pdfBlobs:pdfBlobs,
+        photoBlobs:photoBlobs
       };
       const json=JSON.stringify(pkg);
       const blob=new Blob([json],{type:'application/json'});
@@ -1623,7 +1783,7 @@ const SYNC={
       setLoading(null);
       const mb=(json.length/1048576).toFixed(1);
       const nPins=srcObras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
-      const nFotos=srcObras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.foto).length,0),0);
+      const nFotos=srcObras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.filter(p=>p.fotoId).length,0),0);
       await showAlert('✓ Respaldo generado',
         `Archivo: ${fname}\nTamaño: ${mb} MB\n\nContiene:\n· ${srcObras.length} obra(s)\n· ${totalPdfs} plano(s)\n· ${nPins} evidencia(s)\n· ${nFotos} foto(s)\n\nGuárdalo en Drive o mándatelo a ti mismo. Para editar en otro equipo, ábrelo con "Importar".`);
     }catch(e){setLoading(null);console.warn('export',e);await showAlert('Error',`No se pudo generar el respaldo.\n${e.message}`);}
@@ -1640,7 +1800,7 @@ const SYNC={
       const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
       body+=`<button class="bsec" style="width:100%;margin-bottom:6px;text-align:left;display:flex;align-items:center;gap:10px;" onclick="SYNC._doExport(${o.id})">
         <span style="width:12px;height:12px;border-radius:50%;background:${o.color};flex-shrink:0;"></span>
-        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${o.name}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
+        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${esc(o.name)}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
       </button>`;
     });
     body+=`</div>`;
@@ -1674,7 +1834,7 @@ const SYNC={
     // Resumen del respaldo vs estado actual
     const inObras=pkg.obras.length;
     const inPins=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0),0);
-    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.foto).length||0),0),0);
+    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.fotoId).length||0),0),0);
     const curObras=obras.length;
     const curPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
     const fecha=pkg.exportedAt?new Date(pkg.exportedAt).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'}):'desconocida';
@@ -1733,8 +1893,10 @@ const SYNC={
         const imp=pkg.obras[0];
         const norm=s=>(s||'').trim().toUpperCase();
         const idx=obras.findIndex(o=>norm(o.name)===norm(imp.name));
-        // Borrar PDFs de la obra que se va a reemplazar (si existía)
-        if(idx>=0){for(const f of obras[idx].pdfs){await DB.del(f.id);delete docCache[f.id];}}
+        // Borrar PDFs y fotos de la obra que se va a reemplazar (si existía)
+        if(idx>=0){for(const f of obras[idx].pdfs){await DB.del(f.id);delete docCache[f.id];for(const p of f.pins){if(p.fotoId){DB.delPhoto(p.fotoId);delete photoMem[p.fotoId];}}}}
+        // Restaurar fotos del paquete entrante
+        await this.restorePhotos(pkg);
         // Reasignar IDs nuevos para los PDFs entrantes
         const newObra={...imp,id:(idx>=0?obras[idx].id:nObraId++),pdfs:[]};
         for(const f of imp.pdfs){
@@ -1751,12 +1913,15 @@ const SYNC={
       }
       // Reemplazo TOTAL (historial completo)
       for(const o of obras)for(const f of o.pdfs){await DB.del(f.id);}
+      // Limpiar TODAS las fotos viejas del store (evita huérfanas)
+      try{const oldPhotoIds=await DB.allPhotoIds();for(const fid of oldPhotoIds){await DB.delPhoto(fid);delete photoMem[fid];}}catch(_){}
       Object.keys(docCache).forEach(k=>delete docCache[k]);
       Object.keys(pageCache).forEach(k=>{URL.revokeObjectURL(pageCache[k]?.blobURL);delete pageCache[k];});
       obras=pkg.obras;
       customCats=pkg.customCats||[];
       if(pkg.counters){nObraId=pkg.counters.nObraId||1;nPdfId=pkg.counters.nPdfId||1;}
       await this.restorePdfBlobs(pkg);
+      await this.restorePhotos(pkg);
       if(pkg.repPrefs){try{localStorage.setItem(REP_PREFS,JSON.stringify(pkg.repPrefs));}catch(_){}}
       persist();persistCats();
       setLoading(null);
@@ -1769,71 +1934,61 @@ const SYNC={
   async doMerge(pkg){
     setLoading('Combinando datos…',10);
     try{
+      // Restaurar todas las fotos del paquete primero (fotoId es único, no colisiona)
+      await this.restorePhotos(pkg);
       let addedObras=0,addedPins=0,updatedPins=0;
-      // Mapa de obras actuales por nombre (normalizado)
       const norm=s=>(s||'').trim().toUpperCase();
       const byName={};obras.forEach(o=>{byName[norm(o.name)]=o;});
 
-      // Combinar categorías personalizadas (por id)
       const catIds=new Set(customCats.map(c=>c.id));
       (pkg.customCats||[]).forEach(c=>{if(!catIds.has(c.id)){customCats.push(c);catIds.add(c.id);}});
 
       for(const impObra of pkg.obras){
         let target=byName[norm(impObra.name)];
         if(!target){
-          // Obra nueva completa → reasignar IDs para no colisionar
           const newObra={...impObra,id:nObraId++,pdfs:[]};
           for(const f of impObra.pdfs){
             const newId=nPdfId++;
             const newPdf={...f,id:newId};
-            // mover el blob del respaldo a la nueva id
-            if(pkg.pdfBlobs&&pkg.pdfBlobs[f.id]){
-              const ab=this.b64ToAb(pkg.pdfBlobs[f.id]);
-              if(ab)await DB.put(newId,ab);
-            }
+            if(pkg.pdfBlobs&&pkg.pdfBlobs[f.id]){const ab=this.b64ToAb(pkg.pdfBlobs[f.id]);if(ab)await DB.put(newId,ab);}
             newObra.pdfs.push(newPdf);
           }
           obras.push(newObra);byName[norm(newObra.name)]=newObra;
           addedObras++;addedPins+=impObra.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0);
         }else{
-          // Obra existe → combinar PDFs por displayName/name
           const pdfByName={};target.pdfs.forEach(f=>{pdfByName[norm(f.displayName||f.name)]=f;});
           for(const impPdf of impObra.pdfs){
             let tPdf=pdfByName[norm(impPdf.displayName||impPdf.name)];
             if(!tPdf){
               const newId=nPdfId++;
               const newPdf={...impPdf,id:newId};
-              if(pkg.pdfBlobs&&pkg.pdfBlobs[impPdf.id]){
-                const ab=this.b64ToAb(pkg.pdfBlobs[impPdf.id]);
-                if(ab)await DB.put(newId,ab);
-              }
+              if(pkg.pdfBlobs&&pkg.pdfBlobs[impPdf.id]){const ab=this.b64ToAb(pkg.pdfBlobs[impPdf.id]);if(ab)await DB.put(newId,ab);}
               target.pdfs.push(newPdf);pdfByName[norm(newPdf.displayName||newPdf.name)]=newPdf;
               addedPins+=impPdf.pins?.length||0;
             }else{
-              // PDF existe → combinar pines. Clave: misma posición + categoría
+              // PDF existe → combinar pines por firma (posición + categoría + página)
               const sig=p=>`${p.cat}|${(p.xPct||0).toFixed(4)}|${(p.yPct||0).toFixed(4)}|${p.page}`;
               const existing={};tPdf.pins.forEach(p=>{existing[sig(p)]=p;});
+              if(!tPdf.nextNum)tPdf.nextNum=Math.max(0,...tPdf.pins.map(x=>x.num||0))+1;
               for(const impPin of (impPdf.pins||[])){
                 const s=sig(impPin);
                 const ex=existing[s];
                 if(!ex){
-                  // pin nuevo → id consecutivo en este pdf
-                  const nid=Math.max(0,...tPdf.pins.map(x=>x.id||0))+1;
-                  tPdf.pins.push({...impPin,id:nid});
-                  existing[s]={...impPin,id:nid};
-                  addedPins++;
+                  // pin nuevo → uid propio (o el del paquete) y num consecutivo
+                  const np={...impPin,uid:impPin.uid||uid('pin'),num:tPdf.nextNum++};
+                  tPdf.pins.push(np);existing[s]=np;addedPins++;
                 }else{
-                  // mismo pin → conservar el más completo (nota más larga / foto más reciente)
+                  // mismo pin → conservar lo más completo
                   const impLen=(impPin.nota||'').length, exLen=(ex.nota||'').length;
                   let changed=false;
                   if(impLen>exLen){ex.nota=impPin.nota;changed=true;}
-                  if(impPin.foto&&!ex.foto){ex.foto=impPin.foto;ex.fotoFecha=impPin.fotoFecha;changed=true;}
+                  if(impPin.fotoId&&!ex.fotoId){ex.fotoId=impPin.fotoId;ex.fotoFecha=impPin.fotoFecha;changed=true;}
                   if(impPin.resp&&!ex.resp){ex.resp=impPin.resp;changed=true;}
                   if(impPin.sender&&!ex.sender){ex.sender=impPin.sender;changed=true;}
                   if(changed)updatedPins++;
                 }
               }
-              tPdf.nextPinId=Math.max(0,...tPdf.pins.map(x=>x.id||0))+1;
+              tPdf.nextNum=Math.max(0,...tPdf.pins.map(x=>x.num||0))+1;
             }
           }
         }
@@ -1859,6 +2014,26 @@ const SYNC={
           try{docCache[f.id]=await pdfjsLib.getDocument({data:ab.slice(0)}).promise;}catch(_){}
         }
       }
+    }
+  },
+
+  // Restaura las fotos del paquete a IndexedDB (mapa fotoId→dataURL)
+  async restorePhotos(pkg){
+    // Fotos en formato nuevo (mapa photoBlobs)
+    if(pkg.photoBlobs){
+      for(const fid of Object.keys(pkg.photoBlobs)){
+        const data=pkg.photoBlobs[fid];
+        if(data){await DB.putPhoto(fid,data);photoMem[fid]=data;}
+      }
+    }
+    // Migración: fotos viejas embebidas en los pines (p.foto base64)
+    for(const o of (pkg.obras||[]))for(const f of (o.pdfs||[]))for(const p of (f.pins||[])){
+      if(p.foto&&!p.fotoId){
+        const fid=uid('photo');await DB.putPhoto(fid,p.foto);photoMem[fid]=p.foto;
+        p.fotoId=fid;delete p.foto;
+      }
+      if(p.uid===undefined)p.uid=uid('pin');
+      if(p.num===undefined)p.num=(p.id!=null?p.id:0);
     }
   }
 };
@@ -1959,7 +2134,7 @@ const P2P={
       const pins=o.pdfs.reduce((a,f)=>a+f.pins.length,0);
       html+=`<button class="bsec" style="width:100%;margin-bottom:6px;text-align:left;display:flex;align-items:center;gap:10px;" onclick="P2P.scopeObra('${o.id}')">
         <span style="width:12px;height:12px;border-radius:50%;background:${o.color};flex-shrink:0;"></span>
-        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${o.name}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
+        <span style="flex:1;min-width:0;"><span style="font-weight:800;color:#e6edf3;">${esc(o.name)}</span><br><span style="font-size:10px;color:#8b949e;">${o.pdfs.length} PDF · ${pins} evidencia(s)</span></span>
       </button>`;
     });
     html+=`</div><button class="bsec" style="width:100%;margin-top:8px;" onclick="P2P.showMenu()">‹ Volver</button>`;
@@ -2149,8 +2324,14 @@ const P2P={
     const pdfBlobs={};
     let total=0;srcObras.forEach(o=>o.pdfs.forEach(()=>total++));let done=0;
     for(const o of srcObras)for(const f of o.pdfs){
-      done++;onProg&&onProg(Math.round(done/Math.max(1,total)*70),`Empaquetando planos ${done}/${total}…`);
+      done++;onProg&&onProg(Math.round(done/Math.max(1,total)*60),`Empaquetando planos ${done}/${total}…`);
       const ab=await DB.get(f.id);if(ab)pdfBlobs[f.id]=SYNC.abToB64(ab);
+    }
+    // Recolectar fotos
+    onProg&&onProg(70,'Empaquetando fotos…');
+    const photoBlobs={};
+    for(const o of srcObras)for(const f of o.pdfs)for(const p of f.pins){
+      if(p.fotoId&&!photoBlobs[p.fotoId]){const d=await DB.getPhoto(p.fotoId);if(d)photoBlobs[p.fotoId]=d;}
     }
     return {
       app:'ObraPines',version:SYNC.VERSION,exportedAt:new Date().toISOString(),
@@ -2158,7 +2339,7 @@ const P2P={
       device:navigator.userAgent.slice(0,80),counters:{nObraId,nPdfId},
       obras:srcObras,customCats,
       repPrefs:(()=>{try{return JSON.parse(localStorage.getItem(REP_PREFS)||'null');}catch{return null;}})(),
-      pdfBlobs
+      pdfBlobs,photoBlobs
     };
   },
 
@@ -2166,7 +2347,7 @@ const P2P={
     if(!pkg||pkg.app!=='ObraPines'||!Array.isArray(pkg.obras)){await showAlert('Error','Los datos recibidos no son válidos.');return;}
     const inObras=pkg.obras.length;
     const inPins=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.length||0),0),0);
-    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.foto).length||0),0),0);
+    const inFotos=pkg.obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+(f.pins?.filter(p=>p.fotoId).length||0),0),0);
     const curObras=obras.length;
     const curPins=obras.reduce((s,o)=>s+o.pdfs.reduce((a,f)=>a+f.pins.length,0),0);
     const scopeTxt=pkg.scope==='obra'?`(solo la obra "${pkg.obras[0]?.name||''}")`:'(historial completo)';
