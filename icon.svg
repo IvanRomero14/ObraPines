@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="rc"><rect width="512" height="512" rx="104"/></clipPath>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#1a222c" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="pinG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#43efc4"/>
+      <stop offset=".55" stop-color="#22d3a8"/>
+      <stop offset="1" stop-color="#119e83"/>
+    </linearGradient>
+    <radialGradient id="tipGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#22d3a8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#22d3a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="512" height="512" rx="104" fill="#0d1117"/>
+
+  <g clip-path="url(#rc)">
+    <!-- Retícula blueprint -->
+    <rect width="512" height="512" fill="url(#grid)"/>
+
+    <!-- ══ MUROS DEL PLANO (doble línea arquitectónica) ══ -->
+    <g stroke="#4b5563" fill="none" stroke-linecap="square">
+      <!-- muro perimetral L -->
+      <path d="M110 208 V430 H392" stroke-width="11"/>
+      <path d="M110 208 V430 H392" stroke="#0d1117" stroke-width="4"/>
+      <!-- muro interior -->
+      <path d="M110 330 H236" stroke-width="8"/>
+      <path d="M110 330 H236" stroke="#0d1117" stroke-width="3"/>
+      <!-- muro superior con vano de puerta -->
+      <path d="M110 208 H196" stroke-width="11"/>
+      <path d="M258 208 H330" stroke-width="11"/>
+    </g>
+    <!-- Abatimiento de puerta -->
+    <g stroke="#3d4653" fill="none">
+      <line x1="196" y1="208" x2="196" y2="270" stroke-width="4"/>
+      <path d="M196 270 A62 62 0 0 0 258 208" stroke-width="2.5" stroke-dasharray="5 5"/>
+    </g>
+    <!-- Ventana (triple línea) -->
+    <g stroke="#3d4653" stroke-width="2.5">
+      <line x1="110" y1="376" x2="110" y2="416"/>
+    </g>
+
+    <!-- ══ EJES ESTRUCTURALES ══ -->
+    <g stroke="#7d8896" stroke-width="3" stroke-dasharray="16 9 3 9" fill="none" opacity=".85">
+      <line x1="150" y1="92"  x2="150" y2="452"/>
+      <line x1="330" y1="92"  x2="330" y2="452"/>
+      <line x1="88"  y1="208" x2="452" y2="208"/>
+      <line x1="88"  y1="335" x2="452" y2="335"/>
+    </g>
+    <!-- Globos de eje -->
+    <g font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="30" text-anchor="middle">
+      <circle cx="150" cy="66" r="27" fill="#0d1117" stroke="#8b949e" stroke-width="3.5"/>
+      <text x="150" y="77" fill="#c9d1d9">1</text>
+      <circle cx="330" cy="66" r="27" fill="#0d1117" stroke="#22d3a8" stroke-width="3.5"/>
+      <text x="330" y="77" fill="#22d3a8">2</text>
+      <circle cx="64" cy="208" r="27" fill="#0d1117" stroke="#8b949e" stroke-width="3.5"/>
+      <text x="64" y="219" fill="#c9d1d9">A</text>
+      <circle cx="64" cy="335" r="27" fill="#0d1117" stroke="#22d3a8" stroke-width="3.5"/>
+      <text x="64" y="346" fill="#22d3a8">B</text>
+    </g>
+
+    <!-- ══ CRUCE 2-B: anillos de ubicación ══ -->
+    <circle cx="330" cy="335" r="72" fill="url(#tipGlow)"/>
+    <circle cx="330" cy="335" r="40" fill="none" stroke="#22d3a8" stroke-width="2.5" opacity=".45"/>
+    <circle cx="330" cy="335" r="20" fill="none" stroke="#22d3a8" stroke-width="2.5" opacity=".75"/>
+
+    <!-- Sombra del pin -->
+    <ellipse cx="330" cy="341" rx="52" ry="13" fill="#000" opacity=".5"/>
+
+    <!-- ══ PIN (punta exacta en cruce de ejes 2-B) ══ -->
+    <g transform="translate(240,92) scale(9)" filter="url(#ds)">
+      <path d="M10 1C5.6 1 2 4.6 2 9c0 5.8 8 18 8 18s8-12.2 8-18C18 4.6 14.4 1 10 1z"
+            fill="url(#pinG)" stroke="rgba(255,255,255,.6)" stroke-width=".7"/>
+      <!-- brillo especular -->
+      <path d="M5.2 4.2C6.2 2.9 7.6 2.1 9 2c-2.6.6-4.4 2.5-5 4.8-.3-.9 0-1.8 1.2-2.6z"
+            fill="#ffffff" opacity=".45"/>
+      <!-- cabeza blanca -->
+      <circle cx="10" cy="9" r="5.3" fill="#f5fffc"/>
+      <!-- cruceta de ejes en miniatura -->
+      <line x1="10" y1="5" x2="10" y2="13" stroke="#0d1117" stroke-width=".55" stroke-dasharray="1.6 .9 .35 .9"/>
+      <line x1="6" y1="9" x2="14" y2="9" stroke="#0d1117" stroke-width=".55" stroke-dasharray="1.6 .9 .35 .9"/>
+      <circle cx="10" cy="9" r="1.15" fill="#119e83"/>
+    </g>
+  </g>
+</svg>
