@@ -124,39 +124,42 @@ button{font-family:'Montserrat',sans-serif;cursor:pointer;}
 @media(hover:hover){#kbhint{display:block;}}
 
 /* ── FOOTER VIEWER ── */
-#vftr{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#161b22;border-top:1px solid #30363d;flex-shrink:0;height:62px;position:relative;overflow:visible;}
+#vftr{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#161b22;border-top:1px solid #30363d;flex-shrink:0;height:62px;position:relative;overflow:visible;}
+#vftr-strip{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:visible;}
 .vfb{min-width:46px;height:46px;background:#21262d;border:1px solid #30363d;border-radius:10px;color:#e6edf3;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none;font-weight:800;padding:0 7px;transition:background .12s;}
 .vfb:hover{background:#30363d;}
 .vfl{font-size:11px;color:#8b949e;min-width:42px;text-align:center;flex-shrink:0;}
 #pin-fab{width:50px;height:50px;border-radius:50%;background:#21262d;border:2px solid #30363d;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;user-select:none;}
 #pin-fab.on{background:#f9731622;border-color:#f97316;box-shadow:0 0 14px #f9731666;}
 .vf-gap{flex:1;min-width:4px;}
-@media(max-width:520px){
-  #vftr{height:58px;gap:4px;padding:6px 7px;}
-  #vftr .vf-gap{flex:0 1 6px;min-width:2px;}
-  #vftr .vfb{min-width:40px;width:40px;height:44px;border-radius:9px;font-size:15px;padding:0;}
-  #vftr .vfl{min-width:34px;font-size:10px;}
-  #v-zl{display:none;}
-  #pin-fab{width:48px;height:48px;font-size:22px;margin-left:auto;}
-  .desktop-tool{display:none;}
-  #more-btn{display:flex;}
-  #more-menu{right:60px;bottom:62px;}
-}
-@media(max-width:370px){
-  #vftr{gap:3px;padding:6px 6px;}
-  #vftr .vfb{min-width:37px;width:37px;height:43px;}
-  #vftr .vfl{min-width:30px;font-size:9px;}
-  #fit-btn{display:none;}
-  #pin-fab{width:47px;height:47px;}
-}
 .desktop-tool{display:flex;}
 #more-btn{display:none;}
-#more-menu{display:none;position:absolute;right:68px;bottom:66px;background:#161b22;border:1px solid #30363d;border-radius:12px;padding:8px;z-index:45;box-shadow:0 16px 40px #0008;min-width:210px;}
+#more-menu{display:none;position:absolute;right:72px;bottom:66px;background:#161b22;border:1px solid #30363d;border-radius:12px;padding:8px;z-index:45;box-shadow:0 16px 40px #0008;min-width:210px;}
 #more-menu.on{display:block;}
 .more-item{width:100%;height:44px;background:#21262d;border:1px solid #30363d;border-radius:9px;color:#e6edf3;font-weight:800;font-size:13px;display:flex;align-items:center;gap:10px;padding:0 12px;margin-bottom:6px;}
 .more-item:last-child{margin-bottom:0;}
 .more-item:active{background:#30363d;}
 .storage-pill{font-size:10px;color:#8b949e;border:1px solid #30363d;background:#21262d;border-radius:999px;padding:5px 8px;white-space:nowrap;font-weight:800;}
+@media(max-width:640px){
+  #vftr{height:66px;gap:9px;padding:7px 8px 8px 8px;}
+  #vftr-strip{height:52px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 24px 0 1px;mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 22px),transparent 100%);}
+  #vftr-strip::-webkit-scrollbar{display:none;}
+  #vftr .vf-gap{flex:0 0 8px;min-width:8px;}
+  #vftr .vfb{min-width:44px;width:44px;height:46px;border-radius:10px;font-size:15px;padding:0;}
+  #vftr .vfl{min-width:38px;font-size:10px;}
+  #pin-fab{width:54px;height:54px;font-size:24px;margin-left:0;border-width:2px;box-shadow:0 8px 22px #0007;}
+  #pin-fab.on{box-shadow:0 0 0 4px #f9731620,0 8px 22px #0008;}
+  .desktop-tool{display:none;}
+  #more-btn{display:flex;}
+  #more-menu{right:72px;bottom:70px;}
+}
+@media(max-width:370px){
+  #vftr{gap:7px;padding-left:7px;padding-right:7px;}
+  #vftr-strip{padding-right:18px;}
+  #vftr .vfb{min-width:42px;width:42px;height:46px;}
+  #vftr .vfl{min-width:34px;font-size:9px;}
+  #pin-fab{width:54px;height:54px;}
+}
 /* ── PIN VIEWER ── *//* ── PIN VIEWER ── */
 #pv{display:none;position:fixed;inset:0;background:#000;z-index:150;flex-direction:column;}
 #pv.on{display:flex;}
@@ -340,19 +343,21 @@ textarea.inp{min-height:72px;resize:vertical;font-size:14px;line-height:1.5;}
     </div>
   </div>
   <div id="vftr">
-    <div class="vfb" id="v-prev" onclick="changePage(-1)">‹</div>
-    <span class="vfl" id="v-pg">1/1</span>
-    <div class="vfb" id="v-next" onclick="changePage(1)">›</div>
-    <div class="vf-gap"></div>
-    <div class="vfb" onclick="zoomBy(1/1.4)" style="font-size:20px;">−</div>
-    <span class="vfl" id="v-zl">100%</span>
-    <div class="vfb" onclick="zoomBy(1.4)" style="font-size:20px;">+</div>
-    <div class="vfb" id="fit-btn" onclick="zoomFit()" style="font-size:15px;" title="Ajustar">⊡</div>
-    <div class="vfb desktop-tool" onclick="rotateView(-90)" style="font-size:16px;" title="Rotar izquierda">↶</div>
-    <div class="vfb desktop-tool" id="v-rot" onclick="rotateView(90)" style="font-size:16px;" title="Rotar derecha">↷</div>
-    <div class="vfb desktop-tool" id="renum-btn" onclick="openRenumberModal()" style="font-size:13px;" title="Renumerar por categoría">#</div>
-    <div class="vfb desktop-tool" id="layers-btn" onclick="toggleLayersPanel()" style="font-size:14px;position:relative;" title="Capas por categoría">▤</div>
-    <div class="vfb" id="more-btn" onclick="toggleMoreMenu()" style="font-size:22px;" title="Más herramientas">⋯</div>
+    <div id="vftr-strip" aria-label="Herramientas del plano">
+      <div class="vfb" id="v-prev" onclick="changePage(-1)">‹</div>
+      <span class="vfl" id="v-pg">1/1</span>
+      <div class="vfb" id="v-next" onclick="changePage(1)">›</div>
+      <div class="vf-gap"></div>
+      <div class="vfb" onclick="zoomBy(1/1.4)" style="font-size:20px;">−</div>
+      <span class="vfl" id="v-zl">100%</span>
+      <div class="vfb" onclick="zoomBy(1.4)" style="font-size:20px;">+</div>
+      <div class="vfb" id="fit-btn" onclick="zoomFit()" style="font-size:15px;" title="Ajustar">⊡</div>
+      <div class="vfb desktop-tool" onclick="rotateView(-90)" style="font-size:16px;" title="Rotar izquierda">↶</div>
+      <div class="vfb desktop-tool" id="v-rot" onclick="rotateView(90)" style="font-size:16px;" title="Rotar derecha">↷</div>
+      <div class="vfb desktop-tool" id="renum-btn" onclick="openRenumberModal()" style="font-size:13px;" title="Renumerar por categoría">#</div>
+      <div class="vfb desktop-tool" id="layers-btn" onclick="toggleLayersPanel()" style="font-size:14px;position:relative;" title="Capas por categoría">▤</div>
+      <div class="vfb" id="more-btn" onclick="toggleMoreMenu()" style="font-size:22px;" title="Más herramientas">⋯</div>
+    </div>
     <div id="more-menu" onclick="event.stopPropagation()">
       <button class="more-item" onclick="rotateView(-90);toggleMoreMenu(false)">↶ Rotar izquierda</button>
       <button class="more-item" onclick="rotateView(90);toggleMoreMenu(false)">↷ Rotar derecha</button>
@@ -360,8 +365,7 @@ textarea.inp{min-height:72px;resize:vertical;font-size:14px;line-height:1.5;}
       <button class="more-item" id="layers-menu-btn" onclick="toggleLayersPanel();toggleMoreMenu(false)">▤ Capas</button>
       <button class="more-item" onclick="restoreLastDeletedPin();toggleMoreMenu(false)">↩ Recuperar último</button>
     </div>
-    <div class="vf-gap"></div>
-    <div id="pin-fab" onclick="togglePinMode()" title="PIN">📍</div>
+    <div id="pin-fab" onclick="togglePinMode()" title="Colocar evidencia">📍</div>
   </div>
 </div>
 
