@@ -116,13 +116,15 @@ button{font-family:'Montserrat',sans-serif;cursor:pointer;}
 #relocate-pill.on{display:block;}
 #pill{display:none;position:absolute;bottom:68px;left:50%;transform:translateX(-50%);background:#f97316ee;color:#fff;font-weight:800;font-size:11px;padding:8px 18px;border-radius:24px;pointer-events:none;white-space:nowrap;z-index:10;}
 #pill.on{display:block;}
-#aim-reticle{display:none;position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--ax,0px)),calc(-50% + var(--ay,0px)));width:68px;height:68px;z-index:16;pointer-events:auto;touch-action:none;}
+#aim-reticle{display:none;position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--ax,0px)),calc(-50% + var(--ay,0px)));width:76px;height:76px;z-index:16;pointer-events:auto;touch-action:none;}
 #aim-reticle.on{display:block;}
-.aim-ring{position:absolute;inset:0;border:1.6px solid #22d3a8;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.055),0 0 12px rgba(34,211,168,.24);background:rgba(34,211,168,.045);}
-.aim-ring:before,.aim-ring:after{content:'';position:absolute;background:#22d3a8;left:50%;top:50%;transform:translate(-50%,-50%);}
-.aim-ring:before{width:42px;height:1.5px;}
-.aim-ring:after{width:1.5px;height:42px;}
-.aim-ring span{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#f97316;border:1px solid #0d1117;transform:translate(-50%,-50%);}
+.aim-ring{position:absolute;inset:0;border:.9px solid rgba(34,211,168,.62);border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.028);background:transparent;}
+.aim-ring:before,.aim-ring:after{content:'';position:absolute;background:rgba(34,211,168,.72);left:50%;top:50%;transform:translate(-50%,-50%);}
+.aim-ring:before{width:58px;height:.8px;}
+.aim-ring:after{width:.8px;height:58px;}
+.aim-ring span{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:rgba(249,115,22,.78);box-shadow:0 0 0 5px rgba(249,115,22,.08);transform:translate(-50%,-50%);}
+.aim-ring:after{clip-path:polygon(0 0,100% 0,100% 42%,0 42%,0 58%,100% 58%,100% 100%,0 100%);}
+.aim-ring:before{clip-path:polygon(0 0,42% 0,42% 100%,58% 100%,58% 0,100% 0,100% 100%,0 100%);}
 #aim-confirm{display:none;position:absolute;left:50%;bottom:74px;transform:translateX(-50%);z-index:17;border:none;border-radius:999px;background:#22d3a8;color:#0d1117;font-weight:900;font-size:14px;padding:12px 22px;box-shadow:0 10px 28px rgba(0,0,0,.42);}
 #aim-confirm.on{display:block;}
 #kbhint{display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#ffffff28;pointer-events:none;z-index:5;white-space:nowrap;}
@@ -138,12 +140,9 @@ button{font-family:'Montserrat',sans-serif;cursor:pointer;}
 #pin-fab.on{background:#f9731622;border-color:#f97316;box-shadow:0 0 14px #f9731666;}
 .vf-gap{flex:1;min-width:4px;}
 .desktop-tool{display:flex;}
-#more-btn{display:none;}
-#more-menu{display:none;position:absolute;right:72px;bottom:66px;background:#161b22;border:1px solid #30363d;border-radius:12px;padding:8px;z-index:45;box-shadow:0 16px 40px #0008;min-width:210px;}
-#more-menu.on{display:block;}
-.more-item{width:100%;height:44px;background:#21262d;border:1px solid #30363d;border-radius:9px;color:#e6edf3;font-weight:800;font-size:13px;display:flex;align-items:center;gap:10px;padding:0 12px;margin-bottom:6px;}
-.more-item:last-child{margin-bottom:0;}
-.more-item:active{background:#30363d;}
+.mobile-tool{display:none;}
+#more-btn,#more-menu{display:none!important;}
+.more-item{display:none;}
 .storage-pill{font-size:10px;color:#8b949e;border:1px solid #30363d;background:#21262d;border-radius:999px;padding:5px 8px;white-space:nowrap;font-weight:800;}
 @media(max-width:640px){
   #vftr{height:66px;gap:9px;padding:7px 8px 8px 8px;}
@@ -154,9 +153,8 @@ button{font-family:'Montserrat',sans-serif;cursor:pointer;}
   #vftr .vfl{min-width:38px;font-size:10px;}
   #pin-fab{width:54px;height:54px;font-size:24px;margin-left:0;border-width:2px;box-shadow:0 8px 22px #0007;}
   #pin-fab.on{box-shadow:0 0 0 4px #f9731620,0 8px 22px #0008;}
-  .desktop-tool{display:none;}
-  #more-btn{display:flex;}
-  #more-menu{right:72px;bottom:70px;}
+  .desktop-tool{display:flex;}
+  .mobile-tool{display:flex;}
 }
 @media(max-width:370px){
   #vftr{gap:7px;padding-left:7px;padding-right:7px;}
@@ -199,10 +197,13 @@ button{font-family:'Montserrat',sans-serif;cursor:pointer;}
 .pvdot.on{background:#fff;transform:scale(1.3);}
 
 /* ── MODALS ── */
-.ov{display:none;position:fixed;inset:0;background:#00000099;z-index:100;align-items:flex-end;justify-content:center;}
-.ov.on{display:flex;}
+body.modal-open{overflow:hidden;}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:100;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.ov.on{display:flex;animation:ovFade .16s ease-out;}
 #m-confirm,#m-prompt{z-index:500;}
-.md{background:#161b22;border:1px solid #30363d;border-radius:16px 16px 0 0;padding:20px 16px 36px;width:100%;max-width:540px;max-height:90dvh;overflow-y:auto;}
+.md{background:#161b22;border:1px solid #30363d;border-radius:16px 16px 0 0;padding:20px 16px 36px;width:100%;max-width:540px;max-height:90dvh;overflow-y:auto;box-shadow:0 -18px 50px rgba(0,0,0,.38);animation:mdUp .18s ease-out;}
+@keyframes ovFade{from{opacity:0}to{opacity:1}}
+@keyframes mdUp{from{transform:translateY(18px);opacity:.88}to{transform:translateY(0);opacity:1}}
 .md-pin{display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:90dvh;}
 .md-pin .pin-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px;}
 .md-pin .pin-ttl{font-weight:800;font-size:14px;color:#22d3a8;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -365,14 +366,7 @@ textarea.inp{min-height:72px;resize:vertical;font-size:14px;line-height:1.5;}
       <div class="vfb desktop-tool" id="v-rot" onclick="rotateView(90)" style="font-size:16px;" title="Rotar derecha">↷</div>
       <div class="vfb desktop-tool" id="renum-btn" onclick="openRenumberModal()" style="font-size:13px;" title="Renumerar por categoría">#</div>
       <div class="vfb desktop-tool" id="layers-btn" onclick="toggleLayersPanel()" style="font-size:14px;position:relative;" title="Capas por categoría">▤</div>
-      <div class="vfb" id="more-btn" onclick="toggleMoreMenu()" style="font-size:22px;" title="Más herramientas">⋯</div>
-    </div>
-    <div id="more-menu" onclick="event.stopPropagation()">
-      <button class="more-item" onclick="rotateView(-90);toggleMoreMenu(false)">↶ Rotar izquierda</button>
-      <button class="more-item" onclick="rotateView(90);toggleMoreMenu(false)">↷ Rotar derecha</button>
-      <button class="more-item" onclick="openRenumberModal();toggleMoreMenu(false)"># Renumerar</button>
-      <button class="more-item" id="layers-menu-btn" onclick="toggleLayersPanel();toggleMoreMenu(false)">▤ Capas</button>
-      <button class="more-item" onclick="restoreLastDeletedPin();toggleMoreMenu(false)">↩ Recuperar último</button>
+      <div class="vfb mobile-tool" onclick="restoreLastDeletedPin()" style="font-size:15px;" title="Recuperar último">↩</div>
     </div>
     <div id="pin-fab" onclick="togglePinMode()" title="Colocar evidencia">📍</div>
   </div>
@@ -1354,8 +1348,11 @@ async function rotateView(delta){
 }
 function visualPctFromClient(clientX,clientY){
   const r=Q('page-wrap').getBoundingClientRect();
-  const vx=(clientX-r.left)/r.width,vy=(clientY-r.top)/r.height;
-  if(vx<0||vx>1||vy<0||vy>1)return null;
+  let vx=(clientX-r.left)/r.width,vy=(clientY-r.top)/r.height;
+  const edgeMode=useAimMode()&&(pinMode||relocatingPinUid!==null||copyPinUid!==null);
+  const tol=edgeMode ? .18 : 0;
+  if(vx<-tol||vx>1+tol||vy<-tol||vy>1+tol)return null;
+  vx=Math.max(0,Math.min(1,vx));vy=Math.max(0,Math.min(1,vy));
   const p=unrotPoint(vx,vy);
   if(p.x<0||p.x>1||p.y<0||p.y>1)return null;
   return{xPct:p.x,yPct:p.y};
@@ -1556,7 +1553,7 @@ function pinDiagSort(a,b){
 function renumberCategoryAuto(catId,skip=new Set(),start=1){
   if(!actPdf)return 0;
   let n=start;
-  actPdf.pins.filter(p=>p.cat===catId&&!skip.has(p.uid)).sort(pinDiagSort).forEach(p=>{p.num=n++;});
+  actPdf.pins.filter(p=>p?.cat===catId&&!skip.has(p.uid)).sort(pinDiagSort).forEach(p=>{p.num=n++;});
   actPdf.nextNum=Math.max(1,Math.max(0,...actPdf.pins.map(p=>p.num||0))+1);
   persist();drawPins();renderList();renderFilesList();
   return n-start;
@@ -1628,6 +1625,7 @@ function ensureCatLayerVisible(catId,reason=''){
   const h=hiddenCats();h.delete(catId);actPdf.hiddenCats=[...h];
   const c=cat(catId);
   toast(reason||`Se activó la capa ${c.label}`);
+  if(Q('layers-panel')?.classList.contains('on'))renderLayersPanel();
   return true;
 }
 function visiblePins(){return actPdf?actPdf.pins.filter(p=>isCatVisible(p.cat)):[];}
@@ -1651,7 +1649,7 @@ function renderLayersPanel(){
 }
 function showAllLayers(){if(!actPdf)return;actPdf.hiddenCats=[];persist();drawPins();renderList();renderLayersPanel();}
 function hideAllLayers(){if(!actPdf)return;actPdf.hiddenCats=allCats().filter(c=>actPdf.pins.some(p=>p.cat===c.id)).map(c=>c.id);persist();drawPins();renderList();renderLayersPanel();}
-function showOnlyPhotoLayers(){if(!actPdf)return;actPdf.hiddenCats=allCats().filter(c=>actPdf.pins.some(p=>p.cat===c.id)&&!actPdf.pins.some(p=>p.cat===c.id&&p.fotoId)).map(c=>c.id);persist();drawPins();renderList();renderLayersPanel();}
+function showOnlyPhotoLayers(){if(!actPdf)return;actPdf.hiddenCats=allCats().filter(c=>actPdf.pins.some(p=>p.cat===c.id)&&!actPdf.pins.some(p=>p.cat===c.id&&photoCount(p)>0)).map(c=>c.id);persist();drawPins();renderList();renderLayersPanel();}
 function showOnlyLayer(catId){if(!actPdf)return;actPdf.hiddenCats=allCats().filter(c=>c.id!==catId&&actPdf.pins.some(p=>p.cat===c.id)).map(c=>c.id);persist();drawPins();renderList();renderLayersPanel();}
 // ══════════════════════════════════════════════════════════════════════════
 // DRAW PINS
@@ -1773,13 +1771,13 @@ async function doReplacePhoto(input){
   }
   if(!added.length){toast('No se pudo agregar foto');return;}
   syncPinPhotoFields(p);p.photoIds=[...pinPhotoIds(p),...added.map(x=>x.fid)];p.fotoId=p.photoIds[0]||null;
-  pvPhotoIdx=p.photoIds.length-added.length;
+  pvPhotoIdx=Math.max(0,p.photoIds.length-1);
   persist();showPVSlide(pvIdx);drawPins();renderList();toast(added.length+' foto'+(added.length!==1?'s':'')+' agregada'+(added.length!==1?'s':''));
   added.forEach((x,i)=>FOLDER.savePhoto(x.comp, actObra?.name||'OBRA', actPdf.displayName||actPdf.name.replace(/\.pdf$/i,'')||'PLANO', photoCount(p)>1?photoLabel(p,pvPhotoIdx+i):p.num));
 }
 async function pvEdit(){
   const p=pvPins[pvIdx];if(!p)return;_closePV();
-  syncPinPhotoFields(p);editPinUid=p.uid;pendXY=null;selCat=p.cat;formFoto=null;formFotos=[];fotoFecha=p.fotoFecha||null;
+  syncPinPhotoFields(p);editPinUid=p.uid;pendXY=null;selCat=p.cat;formFoto=null;formFotos=[];fotoFecha=p.fotoFecha||null;clearPhotoInputs();
   Q('m-pin-ttl').textContent=`✏️ Editar Evidencia #${p.num}`;Q('pin-delete-btn').style.display='inline-flex';
   Q('pin-nota').value=p.nota||'';Q('pin-resp').value=p.resp||'';Q('pin-sender').value=p.sender||'';
   Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
@@ -1805,8 +1803,8 @@ async function pvDelete(){
 }
 function restoreLastDeletedPin(){
   const trash=getTrash();if(!trash.length){toast('No hay evidencia reciente para recuperar');return;}
-  const item=lastDeletedPinRef?trash.find(t=>t.obraId===lastDeletedPinRef.obraId&&t.pdfId===lastDeletedPinRef.pdfId&&t.pin?.uid===lastDeletedPinRef.pinUid):trash[0];
-  if(!item){toast('No encontré esa evidencia en papelera');return;}
+  const item=trash[0];
+  if(!item){toast('No encontré evidencia en papelera');return;}
   const o=obras.find(x=>x.id===item.obraId),f=o?.pdfs.find(x=>x.id===item.pdfId);
   if(!o||!f){toast('No se pudo recuperar: falta la obra o el plano');return;}
   if(!f.pins.some(p=>p.uid===item.pin.uid))f.pins.push(item.pin);
@@ -1982,8 +1980,9 @@ async function toggleVoiceNote(){
 // ══════════════════════════════════════════════════════════════════════════
 // PIN FORM
 // ══════════════════════════════════════════════════════════════════════════
+function clearPhotoInputs(){['fi-cam','fi-gal','fi-replace'].forEach(id=>{const el=Q(id);if(el)el.value='';});}
 function openPinForm(xy){
-  pendXY=xy;editPinUid=null;selCat=allCats()[0]?.id||'avance';formFoto=null;formFotos=[];fotoFecha=null;
+  pendXY=xy;editPinUid=null;selCat=allCats()[0]?.id||'avance';formFoto=null;formFotos=[];fotoFecha=null;clearPhotoInputs();
   Q('m-pin-ttl').textContent=`📍 Nueva Evidencia #${actPdf?.nextNum||1}`;
   Q('pin-nota').value='';Q('pin-resp').value='';Q('pin-sender').value='';
   Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';
@@ -1993,8 +1992,8 @@ function openPinForm(xy){
 function _closePinModal(){stopVoiceNote(true);pendXY=null;editPinUid=null;Q('pin-delete-btn').style.display='none';closeOv('m-pin');}
 function closePinModal(){_closePinModal();}
 function removePinPhoto(){
-  if(editPinUid===null&&!formFoto){toast('No hay foto que quitar');return;}
-  formFoto='__REMOVE_PHOTO__';formFotos=[];fotoFecha=null;Q('fprev').removeAttribute('src');Q('fwrap').style.display='none';updateFormPhotoCount(0);Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';toast('Fotos quitadas. Guarda para aplicar.');
+  if(editPinUid===null&&!formFoto&&!(formFotos&&formFotos.length)){toast('No hay foto que quitar');return;}
+  clearPhotoInputs();formFoto='__REMOVE_PHOTO__';formFotos=[];fotoFecha=null;Q('fprev').removeAttribute('src');Q('fwrap').style.display='none';updateFormPhotoCount(0);Q('pin-date-block').style.display='none';Q('sender-block').style.display='none';toast('Fotos quitadas. Guarda para aplicar.');
 }
 async function deleteEditingPin(){
   if(editPinUid===null||!actPdf)return;
@@ -2103,8 +2102,9 @@ async function savePin(){
       const p=actPdf.pins.find(x=>x.uid===editPinUid);
       if(p){
         syncPinPhotoFields(p);
-        if(newPhotoIds===null){for(const id of pinPhotoIds(p)){await deletePhotoIfUnused(id,p.uid);}p.photoIds=[];p.fotoId=null;p.fotoFecha=null;}
-        else if(Array.isArray(newPhotoIds)&&newPhotoIds.length){p.photoIds=[...pinPhotoIds(p),...newPhotoIds];p.fotoId=p.photoIds[0]||null;}
+        const oldIds=pinPhotoIds(p);
+        if(newPhotoIds===null){for(const id of oldIds){await deletePhotoIfUnused(id,p.uid);delete photoMem[id];}p.photoIds=[];p.fotoId=null;p.fotoFecha=null;}
+        else if(Array.isArray(newPhotoIds)&&newPhotoIds.length){p.photoIds=[...oldIds,...newPhotoIds];p.fotoId=p.photoIds[0]||null;oldIds.filter(id=>!p.photoIds.includes(id)).forEach(id=>delete photoMem[id]);}
         p.cat=selCat;p.nota=nota;p.resp=resp;p.sender=sender;p.fecha=fecha;
         if(fotoFecha!==null)p.fotoFecha=fotoFecha;
         targetPin=p;
@@ -2606,12 +2606,10 @@ ${sectionsHtml}
 // ══════════════════════════════════════════════════════════════════════════
 // MODALES UTILS
 // ══════════════════════════════════════════════════════════════════════════
-const openOv=id=>Q(id).classList.add('on');
-const closeOv=id=>Q(id).classList.remove('on');
-Q('m-obra').onclick=e=>{if(e.target===Q('m-obra'))closeOv('m-obra');};
-Q('m-pin').onclick=e=>{if(e.target===Q('m-pin'))_closePinModal();};
-Q('m-cat').onclick=e=>{if(e.target===Q('m-cat'))closeOv('m-cat');};
-Q('m-report').onclick=e=>{if(e.target===Q('m-report'))closeOv('m-report');};
+function syncModalOpenState(){document.body.classList.toggle('modal-open',!!document.querySelector('.ov.on'));}
+const openOv=id=>{Q(id).classList.add('on');syncModalOpenState();};
+const closeOv=id=>{Q(id).classList.remove('on');syncModalOpenState();};
+document.querySelectorAll('.ov').forEach(ov=>{ov.addEventListener('click',e=>{if(e.target!==ov)return;if(ov.id==='m-pin')_closePinModal();else if(ov.id!=='m-confirm'&&ov.id!=='m-prompt')closeOv(ov.id);});});
 
 // ══════════════════════════════════════════════════════════════════════════
 // SERVICE WORKER — permite instalar como PWA y abrir sin internet
@@ -2892,8 +2890,8 @@ const SYNC={
               target.pdfs.push(newPdf);pdfByName[norm(newPdf.displayName||newPdf.name)]=newPdf;
               addedPins+=impPdf.pins?.length||0;
             }else{
-              // PDF existe → combinar pines por firma (posición + categoría + página)
-              const sig=p=>`${p.cat}|${(p.xPct||0).toFixed(4)}|${(p.yPct||0).toFixed(4)}|${p.page}`;
+              // PDF existe → combinar pines por uid; si no existe, usar firma precisa (posición + contenido).
+              const sig=p=>p.uid?('uid:'+p.uid):['pos',p.cat||'',(p.xPct||0).toFixed(6),(p.yPct||0).toFixed(6),p.page||'',(p.nota||'').trim().slice(0,80),(p.resp||'').trim()].join('|');
               const existing={};tPdf.pins.forEach(p=>{existing[sig(p)]=p;});
               if(!tPdf.nextNum)tPdf.nextNum=Math.max(0,...tPdf.pins.map(x=>x.num||0))+1;
               for(const impPin of (impPdf.pins||[])){
@@ -2901,7 +2899,7 @@ const SYNC={
                 const ex=existing[s];
                 if(!ex){
                   // pin nuevo → uid propio (o el del paquete) y num consecutivo
-                  const np={...impPin,uid:impPin.uid||uid('pin'),num:tPdf.nextNum++};
+                  const np={...impPin,uid:impPin.uid||uid('pin'),num:tPdf.nextNum++};syncPinPhotoFields(np);
                   tPdf.pins.push(np);existing[s]=np;addedPins++;
                 }else{
                   // mismo pin → conservar lo más completo
