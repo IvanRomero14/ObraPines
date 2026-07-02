@@ -1350,7 +1350,7 @@ function visualPctFromClient(clientX,clientY){
   const r=Q('page-wrap').getBoundingClientRect();
   let vx=(clientX-r.left)/r.width,vy=(clientY-r.top)/r.height;
   const edgeMode=useAimMode()&&(pinMode||relocatingPinUid!==null||copyPinUid!==null);
-  const tol=edgeMode ? .18 : 0;
+  const tol=edgeMode ? .55 : 0;
   if(vx<-tol||vx>1+tol||vy<-tol||vy>1+tol)return null;
   vx=Math.max(0,Math.min(1,vx));vy=Math.max(0,Math.min(1,vy));
   const p=unrotPoint(vx,vy);
@@ -1360,7 +1360,7 @@ function visualPctFromClient(clientX,clientY){
 function visualPctFromEvent(e){return visualPctFromClient(e.clientX,e.clientY);}
 function aimPoint(){const v=Q('vp').getBoundingClientRect();return{x:v.width/2+aimOffX,y:v.height/2+aimOffY,rect:v};}
 function aimXY(){const a=aimPoint();return visualPctFromClient(a.rect.left+a.x,a.rect.top+a.y);}
-function updateAimReticle(){const el=Q('aim-reticle');if(!el)return;const v=Q('vp').getBoundingClientRect();const pad=44;aimOffX=Math.max(-v.width/2+pad,Math.min(v.width/2-pad,aimOffX));aimOffY=Math.max(-v.height/2+pad,Math.min(v.height/2-pad,aimOffY));el.style.setProperty('--ax',aimOffX+'px');el.style.setProperty('--ay',aimOffY+'px');}
+function updateAimReticle(){const el=Q('aim-reticle');if(!el)return;const v=Q('vp').getBoundingClientRect();const pad=24;aimOffX=Math.max(-v.width/2+pad,Math.min(v.width/2-pad,aimOffX));aimOffY=Math.max(-v.height/2+pad,Math.min(v.height/2-pad,aimOffY));el.style.setProperty('--ax',aimOffX+'px');el.style.setProperty('--ay',aimOffY+'px');}
 function useAimMode(){return window.matchMedia('(pointer:coarse),(max-width:640px)').matches;}
 function updateAimUI(){
   const active=useAimMode()&&Q('s-viewer').classList.contains('on')&&(pinMode||relocatingPinUid!==null||copyPinUid!==null);
@@ -1389,8 +1389,9 @@ function clamp(){
   const aimActive=useAimMode()&&(pinMode||relocatingPinUid!==null||copyPinUid!==null);
   const a=aimActive?aimPoint():{x:0,y:0};
   const ox=aimActive?a.x:0,oy=aimActive?a.y:0;
-  tx=cW<=vW&&!aimActive?(vW-cW)/2:Math.min(ox,Math.max(ox-cW,tx));
-  ty=cH<=vH&&!aimActive?(vH-cH)/2:Math.min(oy,Math.max(oy-cH,ty));
+  const ex=aimActive?vW*.18:0,ey=aimActive?vH*.18:0;
+  tx=cW<=vW&&!aimActive?(vW-cW)/2:Math.min(ox+ex,Math.max(ox-cW-ex,tx));
+  ty=cH<=vH&&!aimActive?(vH-cH)/2:Math.min(oy+ey,Math.max(oy-cH-ey,ty));
 }
 function setLoading(msg,pct=null){if(!msg){Q('ld').classList.remove('on');return;}Q('ld-msg').textContent=msg;if(pct!=null)Q('ld-bar').style.width=Math.round(pct)+'%';Q('ld').classList.add('on');}
 function zoomAtPt(sx,sy,nz){nz=Math.min(10,Math.max(0.1,nz));const lx=(sx-tx)/zl,ly=(sy-ty)/zl;tx=sx-lx*nz;ty=sy-ly*nz;zl=nz;applyTx();}
@@ -1400,7 +1401,7 @@ function zoomFit(){zl=1;tx=0;ty=0;resetSharpLayer();applyTx();}
 // ══════════════════════════════════════════════════════════════════════════
 // TOUCH
 // ══════════════════════════════════════════════════════════════════════════
-let pan0=null,pinch0=null,moved=false,swipeX0=null,swipeY0=null;
+let pan0=null,pinch0=null,moved=false,swipeX0=null,swipeY0=null,swipeT0=0,lastVpTap=0;
 const vpEl=Q('vp');
 const aimEl=Q('aim-reticle');
 if(aimEl){
@@ -1414,7 +1415,7 @@ vpEl.addEventListener('touchstart',e=>{
   if(e.touches.length===1){
     const t=e.touches[0];
     pan0={x:t.clientX,y:t.clientY,tx0:tx,ty0:ty};
-    swipeX0=t.clientX;swipeY0=t.clientY;
+    swipeX0=t.clientX;swipeY0=t.clientY;swipeT0=Date.now();
     pinch0=null;
   }else if(e.touches.length>=2){
     moved=true;pan0=null;swipeX0=null;
@@ -1441,10 +1442,20 @@ vpEl.addEventListener('touchmove',e=>{
 
 vpEl.addEventListener('touchend',e=>{
   if(e.touches.length<2)pinch0=null;
-  if(e.touches.length===0&&swipeX0!==null&&!moved&&zl<=1.05){
-    const dx=e.changedTouches[0].clientX-swipeX0;
-    const dy=e.changedTouches[0].clientY-swipeY0;
-    if(Math.abs(dx)>80&&Math.abs(dy)<50)changePage(dx<0?1:-1);
+  if(e.touches.length===0&&swipeX0!==null){
+    const t=e.changedTouches[0];
+    const dx=t.clientX-swipeX0,dy=t.clientY-swipeY0,dt=Date.now()-swipeT0;
+    const aimActive=pinMode||relocatingPinUid!==null||copyPinUid!==null;
+    if(useAimMode()&&!aimActive&&dx<-95&&Math.abs(dy)<70&&dt<700){swipeX0=null;pan0=null;history.back();return;}
+    if(!aimActive&&Math.abs(dx)<14&&Math.abs(dy)<14&&dt<360){
+      const now=Date.now();
+      if(now-lastVpTap<330){
+        if(zl>1.18)zoomFit();else zoomAtPt(t.clientX,t.clientY,2.6);
+        lastVpTap=0;swipeX0=null;pan0=null;return;
+      }
+      lastVpTap=now;
+    }
+    if(!useAimMode()&&!moved&&zl<=1.05&&Math.abs(dx)>90&&Math.abs(dy)<55)changePage(dx<0?1:-1);
     swipeX0=null;
   }
   if(e.touches.length===1){const t=e.touches[0];pan0={x:t.clientX,y:t.clientY,tx0:tx,ty0:ty};}
@@ -1517,7 +1528,7 @@ updateAimUI();
 // ══════════════════════════════════════════════════════════════════════════
 // PIN MODE + MOVER PIN
 // ══════════════════════════════════════════════════════════════════════════
-function setPinMode(on){pinMode=on;if(on)Q('pill').textContent=useAimMode()?'Mueve el plano bajo la mira':'🎯 Modo PIN · Toca para colocar';Q('pin-fab').classList.toggle('on',on);Q('pill').classList.toggle('on',on&&!useAimMode());Q('pins-lyr').classList.toggle('pm',on);Q('vp').classList.toggle('pinmode',on);updateAimUI();}
+function setPinMode(on){pinMode=on;if(on)Q('pill').textContent=useAimMode()?'Mueve el plano bajo la mira':'🎯 Modo PIN · Toca para colocar';Q('pin-fab').classList.toggle('on',on);Q('pill').classList.toggle('on',on&&!useAimMode());Q('pins-lyr').classList.toggle('pm',on);Q('vp').classList.toggle('pinmode',on);updateAimUI();if(on&&useAimMode())toast('Arrastra la mira o mueve el plano. Doble tap ajusta zoom.',2600);}
 function togglePinMode(){setPinMode(!pinMode);}
 function startRelocate(pinId){relocatingPinUid=pinId;setPinMode(false);Q('relocate-pill').classList.toggle('on',!useAimMode());Q('vp').classList.add('relocating');updateAimUI();}
 function cancelRelocate(){relocatingPinUid=null;Q('relocate-pill').classList.remove('on');Q('vp').classList.remove('relocating');updateAimUI();}
